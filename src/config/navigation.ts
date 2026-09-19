@@ -14,12 +14,9 @@ import {
 } from "lucide-react";
 
 export type NavItem = {
-  /** Nhãn hiển thị trên sidebar */
   label: string;
-  /** Đường dẫn route, trùng với thư mục trong src/app/(dashboard) */
   href: string;
   icon: LucideIcon;
-  /** Mô tả ngắn, dùng cho tiêu đề trang và tooltip */
   description: string;
 };
 

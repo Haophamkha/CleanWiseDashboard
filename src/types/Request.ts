@@ -1,4 +1,3 @@
-
 export type RegisterRequest = {
   username: string;
   email: string;
@@ -35,3 +34,29 @@ export type ResetPasswordRequest = {
 export type LoginRequest =
   | { username: string; password: string; phone?: never }
   | { phone: string; password: string; username?: never };
+
+export type ServiceListParams = {
+  section_code?: string;
+  is_active?: boolean;
+  search?: string;
+};
+
+// Dùng cho POST/PATCH /api/admin/services/ — gửi dạng multipart/form-data
+// vì backend nhận file ảnh (ServiceAdminWriteSerializer)
+export type ServiceMutationPayload = {
+  primary_image_id?: number | null;
+  code?: string;
+  section_code?: string;
+  name?: string;
+  description?: string;
+  form_schema?: Record<string, unknown>;
+  pricing_config?: Record<string, unknown>;
+  is_active?: boolean;
+  images?: File[];
+  delete_image_ids?: number[];
+};
+
+export type ServiceQuickToggleRequest = {
+  id: number;
+  is_active: boolean;
+};
