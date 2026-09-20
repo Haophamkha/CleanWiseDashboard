@@ -11,7 +11,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body>
+      <body suppressHydrationWarning>
         <Provider store={store}>{children}</Provider>
       </body>
     </html>
