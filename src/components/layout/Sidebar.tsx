@@ -66,7 +66,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+        <nav className="sidebar-scrollbar flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
