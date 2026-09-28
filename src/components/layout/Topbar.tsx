@@ -12,7 +12,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import { findNavItem } from "@/config/navigation";
-import { logout } from "@/services/authApi";
+import { performLogout } from "@/store/baseApi";
 
 type TopbarProps = {
   onOpenSidebar: () => void;
@@ -43,11 +43,10 @@ export default function Topbar({ onOpenSidebar }: TopbarProps) {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    setOpenProfile(false);
-    router.replace("/login");
-  };
+    const handleLogout = () => {
+      setOpenProfile(false)
+      performLogout();
+    };
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 lg:px-8">

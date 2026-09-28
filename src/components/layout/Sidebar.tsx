@@ -1,7 +1,6 @@
 "use client";
 
-import { logout } from "@/services/authApi";
-import { useRouter } from "next/navigation";
+import { performLogout } from "@/store/baseApi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Sparkle, X } from "lucide-react";
@@ -15,13 +14,11 @@ type SidebarProps = {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    onClose();
-    router.replace("/login");
-  };
+    const handleLogout = () => {
+      onClose();
+      performLogout();
+    };
   return (
     <>
       {/* Lớp phủ cho mobile */}

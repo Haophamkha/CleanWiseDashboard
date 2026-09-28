@@ -7,7 +7,6 @@ import { useLoginMutation, saveTokens } from "@/services/authApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/authSlice";
 
-// Khớp với User.Role.ADMIN = 'ADMIN' bên Django (apps/authentication/models.py)
 const ADMIN_ROLE = "ADMIN";
 
 export default function LoginForm() {
@@ -23,35 +22,46 @@ export default function LoginForm() {
 
   const loading = isLoading;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+      event.preventDefault();
+      setError(null);
 
-    if (!username.trim() || !password) {
-      setError("Nhập tên đăng nhập và mật khẩu.");
-      return;
-    }
-
-    try {
-      const result = await login({
-        username: username.trim(),
-        password,
-      }).unwrap();
-
-      if (result.user?.role !== ADMIN_ROLE) {
-        setError("Tài khoản này không có quyền truy cập trang quản trị.");
+      if (!username.trim() || !password) {
+        setError("Nhập tên đăng nhập và mật khẩu.");
         return;
       }
 
-      saveTokens(result.access, result.refresh);
-      dispatch(setUser(result.user));
-      router.replace("/dashboard");
-    } catch {
-      setError(
-        "Tên đăng nhập hoặc mật khẩu không đúng. Kiểm tra lại và thử lần nữa.",
-      );
+      try {
+        const result = await login({
+          username: username.trim(),
+          password,
+        }).unwrap();
+
+        // Check role TRƯỚC khi lưu token
+        if (result.user?.role !== ADMIN_ROLE) {
+          setError("Tài khoản này không có quyền truy cập trang quản trị.");
+          return;
+        }
+
+        await saveTokens(result.access, result.refresh);
+        dispatch(setUser(result.user));
+        router.replace("/dashboard");
+      } catch (e: unknown) {
+        const error = e as {
+          status?: number;
+        };
+
+        if (error.status === 429) {
+          setError("Bạn thử quá nhiều lần, vui lòng đợi một phút rồi thử lại.");
+        } else if (!error.status) {
+          setError("Không kết nối được máy chủ. Kiểm tra mạng và thử lại.");
+        } else {
+          setError(
+            "Tên đăng nhập hoặc mật khẩu không đúng. Kiểm tra lại và thử lần nữa.",
+          );
+        }
+      }
     }
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
