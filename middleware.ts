@@ -1,32 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { COOKIE_KEYS, ROUTES } from "@/config/constants";
+import { ALLOWED_ROLE, COOKIE_KEYS, ROUTES } from "@/config/constants";
+
+function readRole(token: string): string | null {
+  try {
+    const part = token.split(".")[1];
+    const b64 = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), "=");
+    return JSON.parse(atob(padded)).role ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_KEYS.ACCESS_TOKEN)?.value;
-  const isDashboardRoute =
-    request.nextUrl.pathname.startsWith("/dashboard") ||
-    request.nextUrl.pathname.startsWith("/customers") ||
-    request.nextUrl.pathname.startsWith("/workers") ||
-    request.nextUrl.pathname.startsWith("/services") ||
-    request.nextUrl.pathname.startsWith("/bookings") ||
-    request.nextUrl.pathname.startsWith("/vouchers") ||
-    request.nextUrl.pathname.startsWith("/reports");
+  const { pathname } = request.nextUrl;
+  const isLogin = pathname.startsWith(ROUTES.LOGIN);
 
-  if (isDashboardRoute && !token) {
-    return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
+  const access = request.cookies.get(COOKIE_KEYS.ACCESS_TOKEN)?.value;
+  const refresh = request.cookies.get(COOKIE_KEYS.REFRESH_TOKEN)?.value;
+
+  if (access && readRole(access) !== ALLOWED_ROLE) {
+    const res = isLogin
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
+    res.cookies.delete(COOKIE_KEYS.ACCESS_TOKEN);
+    res.cookies.delete(COOKIE_KEYS.REFRESH_TOKEN);
+    return res;
   }
 
+  const hasSession = Boolean(access || refresh);
+
+  if (!hasSession && !isLogin) {
+    return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
+  }
+  if (hasSession && isLogin) {
+    return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
+  }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/customers/:path*",
-    "/workers/:path*",
-    "/services/:path*",
-    "/bookings/:path*",
-    "/vouchers/:path*",
-    "/reports/:path*",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

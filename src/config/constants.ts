@@ -7,3 +7,5 @@ export const ROUTES = {
   LOGIN: "/login",
   DASHBOARD: "/dashboard",
 };
+
+export const ALLOWED_ROLE = "ADMIN";

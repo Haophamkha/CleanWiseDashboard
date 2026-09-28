@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  CalendarDays,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -9,6 +8,7 @@ import {
   Settings,
   Sparkles,
   TicketPercent,
+  Undo2,
   UserCog,
   Users,
 } from "lucide-react";
@@ -55,11 +55,11 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Danh mục dịch vụ, bảng giá và cấu hình thời lượng từng gói.",
   },
   {
-    label: "Lịch làm việc",
-    href: "/schedules",
-    icon: CalendarDays,
+    label: "Hoàn tiền",
+    href: "/refunds",
+    icon: Undo2,
     description:
-      "Lịch theo ngày và tuần của từng nhân viên, ca trống và ca đã kín.",
+      "Yêu cầu hoàn tiền của khách hàng: duyệt, từ chối và theo dõi trạng thái hoàn.",
   },
   {
     label: "Thanh toán",
