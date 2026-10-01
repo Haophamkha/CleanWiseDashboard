@@ -12,8 +12,27 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 const axiosInstance = axios.create({
   baseURL: ENV.API_URL,
-  timeout: 10000,
+  // Các mutation admin có thể gồm nhiều cập nhật DB và hoàn tiền. Backend đã
+  // tách push notification khỏi request, nhưng vẫn cho một khoảng chờ đủ an toàn
+  // để tránh hiển thị Network Error trong khi server đang hoàn tất transaction.
+  timeout: 30000,
 });
+
+// File downloads use the same authenticated client and token refresh as JSON requests.
+export async function requestBlob(url: string, params: unknown): Promise<Blob> {
+  try {
+    const response = await axiosInstance.get<Blob>(url, { params, responseType: "blob" });
+    return response.data;
+  } catch (error) {
+    const response = (error as AxiosError<Blob>).response;
+    if (response?.data instanceof Blob) {
+      const message = await response.data.text();
+      try { throw { data: JSON.parse(message) }; }
+      catch (parsed) { if (parsed instanceof SyntaxError) throw new Error("Không thể tải báo cáo. Vui lòng thử lại."); throw parsed; }
+    }
+    throw error;
+  }
+}
 
 const PUBLIC_ENDPOINTS = [
   "/api/auth/login/",
@@ -73,10 +92,15 @@ export const performLogout = async (): Promise<void> => {
 
 /* ---------------- refresh (1 promise trong tab, 1 khóa giữa các tab) ---------------- */
 
-const runExclusive = <T>(fn: () => Promise<T>): Promise<T> =>
-  typeof navigator !== "undefined" && "locks" in navigator
-    ? navigator.locks.request("cleanwise-admin-refresh", fn)
-    : fn();
+const runExclusive = <T>(fn: () => Promise<T>): Promise<T> => {
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
+    return navigator.locks.request(
+      "cleanwise-admin-refresh",
+      async () => await fn(),
+    ) as Promise<T>;
+  }
+  return fn();
+};
 
 const doRefresh = async (): Promise<string> => {
   const refresh = getRefreshToken();
@@ -169,13 +193,14 @@ type AxiosBaseQueryArgs = {
   method: AxiosRequestConfig["method"];
   data?: unknown;
   params?: unknown;
+  headers?: AxiosRequestConfig["headers"];
 };
 
 const axiosBaseQuery =
   (): BaseQueryFn<AxiosBaseQueryArgs, unknown, unknown> =>
-  async ({ url, method, data, params }) => {
+  async ({ url, method, data, params, headers }) => {
     try {
-      const result = await axiosInstance({ url, method, data, params });
+      const result = await axiosInstance({ url, method, data, params, headers });
       return { data: result.data };
     } catch (axiosError) {
       const err = axiosError as AxiosError;
