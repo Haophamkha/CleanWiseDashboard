@@ -1,4 +1,5 @@
 "use client";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { ServiceFormSchema } from "@/types/Service";
 import FieldListEditor from "./FieldListEditor";
@@ -26,7 +27,7 @@ export default function ServiceSchemaBuilder({
           <label className="text-xs font-medium text-gray-500">
             Nội dung checklist công việc (mỗi dòng 1 việc)
           </label>
-          <textarea
+          <Textarea
             className="mt-1 w-full rounded-lg border px-2.5 py-1.5 text-xs"
             rows={5}
             value={schema.task_checklist ?? ""}

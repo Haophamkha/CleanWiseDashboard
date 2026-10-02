@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -26,7 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard",
     icon: LayoutDashboard,
     description:
-      "Số liệu vận hành trong ngày và các chỉ số chính của hệ thống.",
+      "Doanh thu, đơn hàng, hiệu suất nhân viên và cơ cấu dịch vụ theo kỳ.",
   },
   {
     label: "Đơn dịch vụ",
@@ -81,13 +80,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: MessageSquareWarning,
     description:
       "Phản ánh của khách hàng, tiến độ xử lý và kết quả giải quyết.",
-  },
-  {
-    label: "Báo cáo",
-    href: "/reports",
-    icon: BarChart3,
-    description:
-      "Báo cáo doanh thu, hiệu suất nhân viên và cơ cấu dịch vụ theo kỳ.",
   },
   {
     label: "Cài đặt",

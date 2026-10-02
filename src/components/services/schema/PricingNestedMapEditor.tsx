@@ -1,4 +1,6 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 import PricingFlatMapEditor from "./PricingFlatMapEditor";
 
@@ -41,20 +43,22 @@ export default function PricingNestedMapEditor({
       {rows.map(([groupKey, entries], i) => (
         <div key={i} className="rounded-lg border border-slate-200 p-2.5">
           <div className="mb-2 flex items-center gap-2">
-            <input
+            <Input
               className="flex-1 rounded-lg border px-2.5 py-1.5 text-xs font-mono font-semibold"
               placeholder="nhóm (vd: WALL_MOUNTED)"
               list={undefined}
               value={groupKey}
               onChange={(e) => renameGroup(i, e.target.value)}
             />
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               type="button"
               onClick={() => removeGroup(i)}
               className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
             >
               Xoá nhóm
-            </button>
+            </Button>
           </div>
           <PricingFlatMapEditor
             entries={entries}
@@ -63,13 +67,15 @@ export default function PricingNestedMapEditor({
           />
         </div>
       ))}
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         type="button"
         onClick={addGroup}
         className="text-xs font-medium text-blue-600 hover:underline"
       >
         + Thêm nhóm
-      </button>
+      </Button>
     </div>
   );
 }

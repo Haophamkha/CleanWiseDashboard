@@ -1,11 +1,25 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
-import type { FormField, FormFieldType } from "@/types/Service";
+import type { FormField, FormFieldType, FieldOption } from "@/types/Service";
 import { FIELD_TYPE_LABELS, isConditionalOptions } from "@/types/Service";
 import ConditionalOptionsEditor from "./ConditionalOptionsEditor";
 import FieldOptionsEditor from "./FieldOptionsEditor";
 
-const OPTION_TYPES: FormFieldType[] = ["SINGLE_SELECT", "MULTI_SELECT"];
+const OPTION_TYPES: FormFieldType[] = [
+  "SINGLE_SELECT",
+  "MULTI_SELECT",
+  "WEEKDAY_MULTI_SELECT",
+];
 
 const emptyField = (key: string): FormField => ({
   key,
@@ -39,22 +53,22 @@ export default function FieldListEditor({
         const siblingFields = fields.filter((_, si) => si !== i);
         const isConditionalSelect =
           OPTION_TYPES.includes(field.type) &&
-          isConditionalOptions(field.options);
+          (field.options_by !== undefined ||
+            isConditionalOptions(field.options));
 
         return (
           <div key={i} className="rounded-xl border border-slate-200 p-3">
             <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-              <input
+              <Input
                 className="rounded-lg border px-2.5 py-1.5 text-xs font-mono"
                 placeholder="key"
                 value={field.key}
                 onChange={(e) => updateField(i, { key: e.target.value })}
               />
-              <select
-                className="rounded-lg border px-2.5 py-1.5 text-xs"
+              <Select
                 value={field.type}
-                onChange={(e) => {
-                  const type = e.target.value as FormFieldType;
+                onValueChange={(value) => {
+                  const type = value as FormFieldType;
                   // đổi loại field thì reset options/item_fields để tránh lẫn shape cũ
                   updateField(i, {
                     type,
@@ -64,22 +78,29 @@ export default function FieldListEditor({
                   });
                 }}
               >
-                {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <button
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
                 type="button"
                 onClick={() => removeField(i)}
                 className="rounded-lg px-2 text-xs font-medium text-red-500 hover:bg-red-50"
               >
                 Xoá field
-              </button>
+              </Button>
             </div>
 
-            <input
+            <Input
               className="mt-2 w-full rounded-lg border px-2.5 py-1.5 text-xs"
               placeholder="Nhãn hiển thị (label)"
               value={field.label}
@@ -87,16 +108,17 @@ export default function FieldListEditor({
             />
 
             <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={!!field.required}
-                onChange={(e) => updateField(i, { required: e.target.checked })}
+                onCheckedChange={(checked) =>
+                  updateField(i, { required: checked === true })
+                }
               />
               Bắt buộc nhập
             </label>
 
             {(field.type === "TEXT" || field.type === "TEXTAREA") && (
-              <input
+              <Input
                 className="mt-2 w-full rounded-lg border px-2.5 py-1.5 text-xs"
                 placeholder="Placeholder (không bắt buộc)"
                 value={field.placeholder ?? ""}
@@ -108,7 +130,7 @@ export default function FieldListEditor({
 
             {field.type === "QUANTITY" && (
               <div className="mt-2 grid grid-cols-2 gap-2">
-                <input
+                <Input
                   type="number"
                   className="rounded-lg border px-2.5 py-1.5 text-xs"
                   placeholder="Min"
@@ -119,7 +141,7 @@ export default function FieldListEditor({
                     })
                   }
                 />
-                <input
+                <Input
                   type="number"
                   className="rounded-lg border px-2.5 py-1.5 text-xs"
                   placeholder="Max"
@@ -134,7 +156,7 @@ export default function FieldListEditor({
             )}
 
             {field.type === "DATE" && (
-              <input
+              <Input
                 type="number"
                 className="mt-2 w-full rounded-lg border px-2.5 py-1.5 text-xs"
                 placeholder="Số ngày tối thiểu kể từ hôm nay"
@@ -151,13 +173,12 @@ export default function FieldListEditor({
 
             {OPTION_TYPES.includes(field.type) && depth > 0 && (
               <label className="mt-2 flex items-center gap-2 text-[11px] font-medium text-slate-500">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isConditionalSelect}
-                  onChange={(e) =>
+                  onCheckedChange={(checked) =>
                     updateField(i, {
                       options: [],
-                      options_by: e.target.checked ? "" : undefined,
+                      options_by: checked === true ? "" : undefined,
                     })
                   }
                 />
@@ -181,14 +202,14 @@ export default function FieldListEditor({
                 />
               ) : (
                 <FieldOptionsEditor
-                  options={(field.options as any) ?? []}
+                  options={(field.options as FieldOption[]) ?? []}
                   onChange={(options) => updateField(i, { options })}
                 />
               ))}
 
             {field.type === "REPEATABLE_GROUP" && (
               <div className="mt-3 rounded-lg border border-dashed border-slate-300 p-2.5">
-                <input
+                <Input
                   type="number"
                   className="mb-2 w-full rounded-lg border px-2.5 py-1.5 text-xs"
                   placeholder="Số lượng mục tối thiểu"
@@ -224,13 +245,15 @@ export default function FieldListEditor({
         );
       })}
 
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         type="button"
         onClick={addField}
         className="w-full rounded-xl border border-dashed border-slate-300 py-2 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-600"
       >
         + Thêm field{depth > 0 ? " trong nhóm lặp" : ""}
-      </button>
+      </Button>
     </div>
   );
 }

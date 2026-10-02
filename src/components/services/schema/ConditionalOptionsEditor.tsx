@@ -1,4 +1,11 @@
 "use client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import type {
   ConditionalOptionGroup,
@@ -46,20 +53,23 @@ export default function ConditionalOptionsEditor({
         <label className="text-[11px] font-medium text-slate-500">
           Phụ thuộc vào field nào (trong cùng nhóm lặp)
         </label>
-        <select
-          className="mt-1 w-full rounded-lg border px-2.5 py-1.5 text-xs"
+        <Select
           value={field.options_by ?? ""}
-          onChange={(e) =>
-            onChange({ options_by: e.target.value || undefined })
-          }
+          onValueChange={(value) => onChange({ options_by: value })}
         >
-          <option value="">— chọn field —</option>
-          {sourceCandidates.map((f) => (
-            <option key={f.key} value={f.key}>
-              {f.label || f.key}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Chọn trường nguồn" />
+          </SelectTrigger>
+          <SelectContent>
+            {sourceCandidates
+              .filter((f) => f.key)
+              .map((f) => (
+                <SelectItem key={f.key} value={f.key}>
+                  {f.label || f.key}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {!field.options_by && (
@@ -84,7 +94,8 @@ export default function ConditionalOptionsEditor({
               className="rounded-lg border border-slate-200 bg-white p-2.5"
             >
               <div className="mb-1 text-[11px] font-semibold text-slate-600">
-                Khi <span className="font-mono">{field.options_by}</span> = "{opt.label}"
+                Khi <span className="font-mono">{field.options_by}</span> =
+                &ldquo;{opt.label}&rdquo;
               </div>
               <FieldOptionsEditor
                 options={group?.items ?? []}
