@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   ChevronDown,
@@ -11,7 +10,6 @@ import {
   User,
   KeyRound,
 } from "lucide-react";
-import { findNavItem } from "@/config/navigation";
 import { performLogout } from "@/store/baseApi";
 
 type TopbarProps = {
@@ -19,9 +17,6 @@ type TopbarProps = {
 };
 
 export default function Topbar({ onOpenSidebar }: TopbarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const current = findNavItem(pathname);
 
   const [openProfile, setOpenProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -49,7 +44,7 @@ export default function Topbar({ onOpenSidebar }: TopbarProps) {
     };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 lg:px-8">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 lg:px-8">
       {/* Mobile menu */}
       <button
         type="button"
@@ -59,11 +54,6 @@ export default function Topbar({ onOpenSidebar }: TopbarProps) {
       >
         <Menu className="h-5 w-5" />
       </button>
-
-      {/* Current page */}
-      <span className="text-sm font-medium text-slate-700">
-        {current?.label ?? "Trang quản trị"}
-      </span>
 
       {/* Right actions */}
       <div className="ml-auto flex items-center gap-2">

@@ -50,7 +50,7 @@ export type WorkerProfile = {
 };
 
 export type UpdateWorkerStatusRequest = {
-  status: "ACTIVE" | "REJECTED" | "SUSPENDED";
+  status: "DRAFT" | "ACTIVE" | "REJECTED" | "SUSPENDED";
   reason?: string;
   rejected_fields?: Record<string, string>;
 };

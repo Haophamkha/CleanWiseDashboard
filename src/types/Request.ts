@@ -53,6 +53,8 @@ export type ServiceMutationPayload = {
   pricing_config?: Record<string, unknown>;
   is_active?: boolean;
   images?: File[];
+  icon_file?: File;
+  remove_icon?: boolean;
   delete_image_ids?: number[];
 };
 

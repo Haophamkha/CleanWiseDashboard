@@ -1,4 +1,14 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   detectPricingGroupShape,
@@ -14,10 +24,12 @@ export default function PricingConfigBuilder({
   config,
   keySuggestions,
   onChange,
+  onValidationChange,
 }: {
   config: PricingConfig;
   keySuggestions: string[];
   onChange: (config: PricingConfig) => void;
+  onValidationChange?: (group: string, invalid: boolean) => void;
 }) {
   const groupKeys = getPricingGroupKeys(config);
 
@@ -32,7 +44,9 @@ export default function PricingConfigBuilder({
   };
 
   const removeGroupName = (name: string) => {
-    const { [name]: _drop, ...rest } = config;
+    onValidationChange?.(name, false);
+    const rest = { ...config };
+    delete rest[name];
     onChange(rest);
   };
 
@@ -45,25 +59,32 @@ export default function PricingConfigBuilder({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
-        <input
+        <Input
           className="rounded-lg border px-2.5 py-1.5 text-xs"
           placeholder="Đơn vị tiền tệ (vd: VND)"
           value={config.currency ?? ""}
           onChange={(e) => onChange({ ...config, currency: e.target.value })}
         />
-        <select
-          className="rounded-lg border px-2.5 py-1.5 text-xs"
+        <Select
           value={config.pricing_type ?? "FIXED"}
-          onChange={(e) =>
-            onChange({ ...config, pricing_type: e.target.value as any })
+          onValueChange={(value) =>
+            onChange({
+              ...config,
+              pricing_type: value as PricingConfig["pricing_type"],
+            })
           }
         >
-          {PRICING_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PRICING_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {groupKeys.map((groupName) => {
@@ -76,7 +97,7 @@ export default function PricingConfigBuilder({
             className="rounded-xl border border-slate-200 bg-slate-50/60 p-3"
           >
             <div className="mb-2 flex items-center gap-2">
-              <input
+              <Input
                 className="flex-1 rounded-lg border px-2.5 py-1.5 text-xs font-mono font-semibold"
                 defaultValue={groupName}
                 onBlur={(e) => renameGroupName(groupName, e.target.value)}
@@ -90,17 +111,19 @@ export default function PricingConfigBuilder({
                       ? "Bảng giá theo nhóm"
                       : "Tuỳ chỉnh"}
               </span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 type="button"
                 onClick={() => removeGroupName(groupName)}
                 className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
               >
                 Xoá
-              </button>
+              </Button>
             </div>
 
             {shape === "number" && (
-              <input
+              <Input
                 type="number"
                 className="w-full rounded-lg border px-2.5 py-1.5 text-xs"
                 value={value as number}
@@ -127,15 +150,17 @@ export default function PricingConfigBuilder({
             {shape === "unknown" && (
               <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
                 Cấu trúc chưa được editor hỗ trợ — sửa JSON trực tiếp.
-                <textarea
+                <Textarea
                   className="mt-2 w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs"
                   rows={4}
                   defaultValue={JSON.stringify(value, null, 2)}
-                  onBlur={(e) => {
+                  onChange={(e) => {
                     try {
-                      updateGroup(groupName, JSON.parse(e.target.value));
+                      const parsed = JSON.parse(e.target.value);
+                      onValidationChange?.(groupName, false);
+                      updateGroup(groupName, parsed);
                     } catch {
-                      // giữ nguyên nếu JSON lỗi
+                      onValidationChange?.(groupName, true);
                     }
                   }}
                 />
@@ -146,27 +171,33 @@ export default function PricingConfigBuilder({
       })}
 
       <div className="flex flex-wrap gap-2">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
           onClick={() => addGroup("flat_map")}
           className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-600"
         >
           + Bảng giá (vd: base_prices)
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
           onClick={() => addGroup("nested_map")}
           className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-600"
         >
           + Bảng giá theo nhóm (vd: unit_prices)
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
           onClick={() => addGroup("number")}
           className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-600"
         >
           + Số tiền đơn (vd: pump_gas_price)
-        </button>
+        </Button>
       </div>
     </div>
   );
