@@ -1,9 +1,9 @@
 "use client";
 
 import { Provider } from "react-redux";
+import { Toaster } from "sonner";
 import { store } from "@/store/store";
 import "./globals.css";
-import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -13,7 +13,8 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body suppressHydrationWarning>
-        <Provider store={store}>{children}<Toaster richColors position="top-right" /></Provider>
+        <Provider store={store}>{children}</Provider>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

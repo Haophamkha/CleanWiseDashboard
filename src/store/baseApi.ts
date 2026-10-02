@@ -9,6 +9,7 @@ import {
 import type { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react";
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import { toast } from "sonner";
 
 const axiosInstance = axios.create({
   baseURL: ENV.API_URL,
@@ -54,7 +55,6 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
-
 
 const channel =
   typeof window !== "undefined" && typeof BroadcastChannel !== "undefined"
@@ -133,6 +133,7 @@ const refreshAccessToken = (failedToken: string | null): Promise<string> =>
     refreshPromise = null;
   }));
 
+// Chỉ logout khi BE TỪ CHỐI refresh token. Mất mạng / timeout / 5xx / 429 thì giữ phiên.
 const shouldLogout = (e: unknown): boolean => {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status;
@@ -156,6 +157,22 @@ const readSentToken = (config: AxiosRequestConfig): string | null => {
     : null;
 };
 
+/* ---------------- rate limit (429) ---------------- */
+
+let lastRateLimitToastAt = 0;
+
+const showRateLimitToast = (retryAfter?: string) => {
+  const now = Date.now();
+  if (now - lastRateLimitToastAt < 3000) return; // tránh spam toast
+  lastRateLimitToastAt = now;
+
+  const message = retryAfter
+    ? `Thao tác quá nhanh. Vui lòng thử lại sau ${retryAfter} giây.`
+    : "Thao tác quá nhanh. Vui lòng thử lại sau ít giây.";
+
+    toast.error(message);
+};
+
 /* ---------------- response ---------------- */
 
 axiosInstance.interceptors.response.use(
@@ -166,6 +183,15 @@ axiosInstance.interceptors.response.use(
       | undefined;
 
     if (!originalRequest) return Promise.reject(error);
+
+    // Bị giới hạn tần suất: báo người dùng, không refresh, không retry
+    if (error.response?.status === 429) {
+      showRateLimitToast(
+        error.response.headers?.["retry-after"] as string | undefined,
+      );
+      return Promise.reject(error);
+    }
+
     if (error.response?.status !== 401) return Promise.reject(error);
     if (isPublicUrl(originalRequest.url) || originalRequest._retry) {
       return Promise.reject(error);
@@ -204,10 +230,12 @@ const axiosBaseQuery =
       return { data: result.data };
     } catch (axiosError) {
       const err = axiosError as AxiosError;
+      const retryAfter = Number(err.response?.headers?.["retry-after"]);
       return {
         error: {
           status: err.response?.status,
           data: err.response?.data ?? err.message,
+          ...(retryAfter > 0 && { retryAfter }),
         },
       };
     }
