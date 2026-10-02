@@ -1,4 +1,7 @@
 "use client";
+import { useId } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function PricingFlatMapEditor({
   entries,
@@ -10,7 +13,7 @@ export default function PricingFlatMapEditor({
   onChange: (entries: Record<string, number>) => void;
 }) {
   const rows = Object.entries(entries);
-  const listId = `price-keys-${Math.random().toString(36).slice(2)}`;
+  const listId = useId();
 
   const updateRow = (index: number, key: string, value: number) => {
     const next = rows.map(([k, v], i) =>
@@ -34,36 +37,40 @@ export default function PricingFlatMapEditor({
       </datalist>
       {rows.map(([key, value], i) => (
         <div key={i} className="grid grid-cols-[1fr_140px_auto] gap-2">
-          <input
+          <Input
             className="rounded-lg border px-2.5 py-1.5 text-xs font-mono"
             placeholder="key (vd: 2_HOURS)"
             list={listId}
             value={key}
             onChange={(e) => updateRow(i, e.target.value, value)}
           />
-          <input
+          <Input
             type="number"
             className="rounded-lg border px-2.5 py-1.5 text-xs"
             placeholder="giá (VND)"
             value={value}
             onChange={(e) => updateRow(i, key, Number(e.target.value))}
           />
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             type="button"
             onClick={() => removeRow(i)}
             className="rounded-lg px-2 text-xs font-medium text-red-500 hover:bg-red-50"
           >
             Xoá
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         type="button"
         onClick={addRow}
         className="text-xs font-medium text-blue-600 hover:underline"
       >
         + Thêm dòng giá
-      </button>
+      </Button>
     </div>
   );
 }

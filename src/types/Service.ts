@@ -14,6 +14,7 @@ export type ServiceListItem = {
   description: string;
   is_active: boolean;
   primary_image: string | null;
+  icon?: string | null;
 };
 
 export type ServiceDetail = {
@@ -22,6 +23,7 @@ export type ServiceDetail = {
   section_code: string;
   name: string;
   description: string;
+  icon?: string | null;
   form_schema: Record<string, unknown>;
   pricing_config: Record<string, unknown>;
   images: ServiceImage[];
@@ -54,7 +56,6 @@ export type FormFieldType =
   | "QUANTITY"
   | "REPEATABLE_GROUP"
   | "TASK_CHECKLIST";
-
 
 export type ServiceFormSchema = {
   version?: number;
@@ -109,10 +110,7 @@ export type PricingConfig = {
 const RESERVED_PRICING_KEYS = new Set(["currency", "pricing_type"]);
 
 export type PricingGroupShape =
-  | "number"
-  | "flat_map"
-  | "nested_map"
-  | "unknown";
+  "number" | "flat_map" | "nested_map" | "unknown";
 
 export const detectPricingGroupShape = (value: unknown): PricingGroupShape => {
   if (typeof value === "number") return "number";
