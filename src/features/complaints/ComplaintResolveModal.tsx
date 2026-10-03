@@ -5,6 +5,11 @@ import {
   useGetComplaintDetailQuery,
   useResolveComplaintMutation,
 } from "@/services/complaintApi";
+import { vnd } from "@/features/refunds/refund-utils";
+import {
+  ComplaintRefundField,
+  type ComplaintRefundValue,
+} from "./ComplaintRefundField";
 import { ComplaintStatusBadge } from "./ComplaintStatusBadge";
 import type { ResolveComplaintRequest } from "@/types/Complaint";
 
@@ -59,15 +64,31 @@ export function ComplaintResolveModal({
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [refund, setRefund] = useState<ComplaintRefundValue>({
+    invalid: false,
+  });
 
   const handleResolve = async (status: ResolveComplaintRequest["status"]) => {
     setError(null);
+
+    // Hoàn tiền chỉ đi kèm trạng thái "Đã xử lý xong" (BE từ chối với trạng thái khác).
+    const withRefund = status === "RESOLVED";
+
+    if (withRefund && refund.invalid) {
+      setError(
+        "Số tiền hoàn chưa hợp lệ. Nhập lại số tiền hoặc bỏ chọn hoàn tiền.",
+      );
+      return;
+    }
 
     try {
       await resolveComplaint({
         id: complaintId,
         status,
         resolution_note: note.trim() || undefined,
+        ...(withRefund && refund.amount
+          ? { refund_amount: refund.amount }
+          : {}),
       }).unwrap();
 
       onClose();
@@ -75,6 +96,10 @@ export function ComplaintResolveModal({
       const message =
         err?.data?.status?.[0] ||
         err?.data?.resolution_note?.[0] ||
+        err?.data?.refund_amount?.[0] ||
+        err?.data?.amount?.[0] ||
+        err?.data?.booking?.[0] ||
+        err?.data?.non_field_errors?.[0] ||
         err?.data?.detail ||
         err?.data?.message ||
         "Xử lý khiếu nại thất bại. Vui lòng thử lại.";
@@ -232,6 +257,14 @@ export function ComplaintResolveModal({
               </div>
             )}
 
+            {detail.refund_amount && Number(detail.refund_amount) > 0 && (
+              <div className="rounded-md bg-green-50 p-3">
+                <p className="text-sm font-medium text-green-800">
+                  Đã hoàn {vnd(detail.refund_amount)} vào ví khách hàng
+                </p>
+              </div>
+            )}
+
             {(detail.status === "PENDING" || detail.status === "IN_REVIEW") && (
               <div className="space-y-3 border-t border-gray-100 pt-4">
                 <textarea
@@ -247,6 +280,23 @@ export function ComplaintResolveModal({
                   rows={4}
                   className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
+
+                <div className="space-y-1">
+                  <ComplaintRefundField
+                    bookingId={detail.booking}
+                    onChange={(value) => {
+                      setRefund(value);
+
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
+
+                  <p className="text-xs text-gray-400">
+                    Tiền chỉ được hoàn khi bấm &ldquo;Đã xử lý xong&rdquo;.
+                  </p>
+                </div>
 
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
