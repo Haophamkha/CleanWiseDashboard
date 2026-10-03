@@ -43,6 +43,9 @@ export interface ComplaintDetail extends Complaint {
   resolution_note: string | null;
   resolved_at: string | null;
 
+  /** Số tiền đã hoàn vào ví khách khi xử lý khiếu nại; null nếu không hoàn. */
+  refund_amount: string | null;
+
   attachments: ComplaintAttachment[];
 }
 
@@ -56,4 +59,6 @@ export interface ResolveComplaintRequest {
   id: number;
   status: "IN_REVIEW" | "RESOLVED" | "REJECTED";
   resolution_note?: string;
+  /** Chỉ gửi khi status = RESOLVED. Bỏ trống = không hoàn tiền. */
+  refund_amount?: string;
 }
