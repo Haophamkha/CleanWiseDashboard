@@ -34,6 +34,9 @@ import {
   RescheduleDialog,
   ScheduleReasonActions,
 } from "./BookingActions";
+import { useGetServiceDetailQuery } from "@/services/servicesApi";
+import type { ServiceFormSchema } from "@/types/Service";
+import { serviceFieldLabel, serviceFieldValue } from "./service-data-display";
 import { dateTime, money, StatusBadge } from "./booking-ui";
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
@@ -53,6 +56,8 @@ export function BookingDetailPage({ id }: { id: number }) {
     isLoading,
     isError,
   } = useGetAdminBookingDetailQuery(id);
+  const { data: serviceDetail } = useGetServiceDetailQuery(booking?.service.id ?? 0, { skip: !booking?.service.id });
+  const serviceFields = (serviceDetail?.data?.form_schema as ServiceFormSchema | undefined)?.fields ?? [];
   const { data: timeline } = useGetBookingTimelineQuery(id);
   const [selected, setSelected] = useState<number[]>([]);
   if (isLoading)
@@ -177,7 +182,7 @@ export function BookingDetailPage({ id }: { id: number }) {
                   label="Đã hoàn vào ví"
                   value={
                     <b className="text-emerald-600">
-                      {money(booking.refunded_amount)}
+                      {money(booking.refunded_amount ?? 0)}
                     </b>
                   }
                 />
@@ -200,12 +205,8 @@ export function BookingDetailPage({ id }: { id: number }) {
               {Object.entries(booking.service_data).map(([key, value]) => (
                 <Info
                   key={key}
-                  label={key.replaceAll("_", " ")}
-                  value={
-                    typeof value === "object"
-                      ? JSON.stringify(value)
-                      : String(value)
-                  }
+                  label={serviceFieldLabel(key, serviceFields)}
+                  value={serviceFieldValue(key, value, serviceFields, booking.service_data)}
                 />
               ))}
               {!Object.keys(booking.service_data).length && (

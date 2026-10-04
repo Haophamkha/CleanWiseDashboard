@@ -1,3 +1,4 @@
+import { StatusPill, type StatusTone } from "@/components/ui/status-pill";
 import { Badge } from "@/components/ui/badge";
 import type { BookingStatus, PaymentStatus, ScheduleStatus } from "@/types/Booking";
 
@@ -10,33 +11,15 @@ export const compactDateTime = (value?: string | null) => {
   const time = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
   return `${day} · ${time}`;
 };
-export const apiError = (error: unknown) => {
-  const root = typeof error === "object" && error !== null ? error as { data?: unknown } : {};
-  const raw = root.data;
-  const data = typeof raw === "object" && raw !== null && "data" in raw ? (raw as { data: unknown }).data : raw;
-  if (typeof data === "string") return data;
-  if (data && typeof data === "object" && "detail" in data) return String((data as { detail: unknown }).detail);
-  if (data && typeof data === "object") return Object.values(data).flat().join(" ");
-  return "Có lỗi xảy ra. Vui lòng thử lại.";
-};
+export { apiError } from "@/lib/api-error";
 
-const statusStyles: Record<string, string> = {
-  PENDING: "border-amber-200 bg-amber-50 text-amber-700",
-  ASSIGNED: "border-blue-200 bg-blue-50 text-blue-700",
-  IN_PROGRESS: "border-violet-200 bg-violet-50 text-violet-700",
-  COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  CANCELLED: "border-rose-200 bg-rose-50 text-rose-700",
-  FAILED: "border-red-200 bg-red-50 text-red-700",
-  MISSED: "border-red-200 bg-red-50 text-red-700",
-};
-
-const dotStyles: Record<string, string> = {
-  PENDING: "bg-amber-500", ASSIGNED: "bg-blue-500", IN_PROGRESS: "bg-violet-500",
-  COMPLETED: "bg-emerald-500", CANCELLED: "bg-rose-500", FAILED: "bg-red-500", MISSED: "bg-red-500",
+const statusTones: Record<string, StatusTone> = {
+  PENDING: "amber", ASSIGNED: "blue", IN_PROGRESS: "violet", COMPLETED: "emerald",
+  CANCELLED: "rose", FAILED: "red", MISSED: "red",
 };
 
 export function StatusBadge({ status, label }: { status: BookingStatus | PaymentStatus | ScheduleStatus | string; label: string }) {
-  return <Badge variant="outline" className={`h-6 gap-1.5 whitespace-nowrap px-2 font-medium ${statusStyles[status] ?? "border-slate-200 bg-slate-50 text-slate-600"}`}><span className={`h-1.5 w-1.5 rounded-full ${dotStyles[status] ?? "bg-slate-400"}`} />{label}</Badge>;
+  return <StatusPill tone={statusTones[status]}>{label}</StatusPill>;
 }
 
 export function PaymentBadge({ status, label }: { status: PaymentStatus; label: string }) {

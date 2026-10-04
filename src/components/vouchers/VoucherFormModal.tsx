@@ -11,7 +11,13 @@ import type {
   VoucherDistributionType,
   VoucherMutationPayload,
 } from "@/types/Voucher";
-import { LoaderCircle, X } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, type FormEvent } from "react";
 
 type VoucherFormModalProps = {
@@ -53,8 +59,7 @@ const EMPTY_FORM: VoucherFormState = {
   is_active: true,
 };
 
-const inputClassName =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+const inputClassName = "w-full";
 
 const toDateTimeLocal = (value: string) => {
   const date = new Date(value);
@@ -253,40 +258,12 @@ export default function VoucherFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        aria-label="Đóng hộp thoại"
-        className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px]"
-        onClick={isSaving ? undefined : onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="voucher-form-title"
-        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-      >
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <h2
-              id="voucher-form-title"
-              className="text-xl font-semibold text-slate-900"
-            >
-              {isEditing ? "Chỉnh sửa voucher" : "Thêm voucher"}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Thiết lập mức giảm, điều kiện và thời gian áp dụng.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSaving}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(value) => { if (!value && !isSaving) onClose(); }}>
+      <DialogContent className="flex max-h-[90dvh] max-w-3xl flex-col overflow-hidden p-0" onEscapeKeyDown={(event) => { if (isSaving) event.preventDefault(); }} onInteractOutside={(event) => { if (isSaving) event.preventDefault(); }}>
+        <DialogHeader className="mb-0 shrink-0 border-b border-slate-200 px-6 py-5 pr-12">
+          <DialogTitle>{isEditing ? "Chỉnh sửa voucher" : "Thêm voucher"}</DialogTitle>
+          <DialogDescription>Thiết lập mức giảm, điều kiện và thời gian áp dụng.</DialogDescription>
+        </DialogHeader>
 
         {isEditing && isLoadingDetail ? (
           <div className="grid min-h-80 place-items-center text-sm text-slate-500">
@@ -313,7 +290,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Mã voucher <span className="text-red-500">*</span>
                   </span>
-                  <input
+                  <Input
                     value={form.code}
                     onChange={(event) =>
                       updateField("code", event.target.value.toUpperCase())
@@ -329,7 +306,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Tên chương trình <span className="text-red-500">*</span>
                   </span>
-                  <input
+                  <Input
                     value={form.name}
                     onChange={(event) => updateField("name", event.target.value)}
                     className={inputClassName}
@@ -343,7 +320,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Mô tả
                   </span>
-                  <textarea
+                  <Textarea
                     value={form.description}
                     onChange={(event) =>
                       updateField("description", event.target.value)
@@ -358,40 +335,30 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Hình thức phát hành
                   </span>
-                  <select
-                    value={form.distribution_type}
-                    onChange={(event) =>
-                      updateField(
-                        "distribution_type",
-                        event.target.value as VoucherDistributionType,
-                      )
-                    }
-                    className={inputClassName}
-                  >
-                    <option value="PUBLIC">Công khai</option>
-                    <option value="CODE_ONLY">Nhận bằng mã</option>
-                    <option value="ASSIGNED">Cấp riêng</option>
-                  </select>
+                  <Select value={form.distribution_type} onValueChange={(value) => updateField("distribution_type", value as VoucherDistributionType)}>
+                    <SelectTrigger aria-label="Hình thức phát hành"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PUBLIC">Công khai</SelectItem>
+                      <SelectItem value="CODE_ONLY">Nhận bằng mã</SelectItem>
+                      <SelectItem value="ASSIGNED">Cấp riêng</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </label>
 
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Loại giảm giá
                   </span>
-                  <select
-                    value={form.discount_type}
-                    onChange={(event) => {
-                      const value = event.target.value as VoucherDiscountType;
-                      updateField("discount_type", value);
-                      if (value === "FIXED") {
-                        updateField("max_discount_amount", "");
-                      }
-                    }}
-                    className={inputClassName}
-                  >
-                    <option value="PERCENT">Theo phần trăm</option>
-                    <option value="FIXED">Số tiền cố định</option>
-                  </select>
+                  <Select value={form.discount_type} onValueChange={(value) => {
+                    updateField("discount_type", value as VoucherDiscountType);
+                    if (value === "FIXED") updateField("max_discount_amount", "");
+                  }}>
+                    <SelectTrigger aria-label="Loại giảm giá"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PERCENT">Theo phần trăm</SelectItem>
+                      <SelectItem value="FIXED">Số tiền cố định</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </label>
 
                 <label className="block">
@@ -399,7 +366,7 @@ export default function VoucherFormModal({
                     Giá trị giảm <span className="text-red-500">*</span>
                   </span>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       min="0.01"
                       step="0.01"
@@ -422,7 +389,7 @@ export default function VoucherFormModal({
                     <span className="mb-1.5 block text-sm font-medium text-slate-700">
                       Mức giảm tối đa
                     </span>
-                    <input
+                    <Input
                       type="number"
                       min="0.01"
                       step="0.01"
@@ -443,7 +410,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Giá trị đơn tối thiểu
                   </span>
-                  <input
+                  <Input
                     type="number"
                     min="0"
                     step="0.01"
@@ -460,7 +427,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Giới hạn phát hành
                   </span>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     step="1"
@@ -478,7 +445,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Bắt đầu <span className="text-red-500">*</span>
                   </span>
-                  <input
+                  <Input
                     type="datetime-local"
                     value={form.start_at}
                     onChange={(event) =>
@@ -493,7 +460,7 @@ export default function VoucherFormModal({
                   <span className="mb-1.5 block text-sm font-medium text-slate-700">
                     Kết thúc <span className="text-red-500">*</span>
                   </span>
-                  <input
+                  <Input
                     type="datetime-local"
                     value={form.end_at}
                     onChange={(event) =>
@@ -505,14 +472,7 @@ export default function VoucherFormModal({
                 </label>
 
                 <label className="flex items-center gap-3 sm:col-span-2">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={(event) =>
-                      updateField("is_active", event.target.checked)
-                    }
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
+                  <Checkbox checked={form.is_active} onCheckedChange={(value) => updateField("is_active", value === true)} aria-label="Cho phép sử dụng voucher" />
                   <span>
                     <span className="block text-sm font-medium text-slate-700">
                       Cho phép sử dụng voucher
@@ -526,26 +486,26 @@ export default function VoucherFormModal({
             </div>
 
             <div className="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
-              <button
+              <Button
                 type="button"
                 onClick={onClose}
                 disabled={isSaving}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                variant="outline"
               >
                 Hủy
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={isSaving}
-                className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-w-32"
               >
                 {isSaving && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 {isEditing ? "Lưu thay đổi" : "Tạo voucher"}
-              </button>
+              </Button>
             </div>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

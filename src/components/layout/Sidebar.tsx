@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, LogOut, Sparkle, X } from "lucide-react";
 import { NAV_ITEMS } from "@/config/navigation";
+import { useGetAdminNotificationSummaryQuery } from "@/services/notificationApi";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
 // Bật để xem log trong Console (F12). Xóa/đổi thành false khi đã chạy ổn.
@@ -26,6 +27,7 @@ export default function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
+  const {data: summary} = useGetAdminNotificationSummaryQuery();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
@@ -147,12 +149,12 @@ export default function Sidebar({
             return (
               <Link
                 key={href}
-                href={href}
+                href={href === "/workers" ? "/workers?status=PENDING" : href}
                 onClick={onClose}
                 title={collapsed ? text : undefined}
                 aria-label={collapsed ? text : undefined}
                 aria-current={active ? "page" : undefined}
-                className={`${itemBase} ${
+                className={`relative ${itemBase} ${
                   active
                     ? "bg-gradient-to-r from-blue-700 to-sky-600 font-medium text-white shadow-md shadow-blue-700/25"
                     : "text-slate-500 hover:bg-white hover:text-blue-700"
@@ -160,6 +162,7 @@ export default function Sidebar({
               >
                 <Icon className="h-[18px] w-[18px] shrink-0" />
                 <span className={label}>{text}</span>
+                {href === "/workers" && !!summary?.pending_profiles && <span aria-label={`${summary.pending_profiles} hồ sơ chờ duyệt`} className={`ml-auto rounded-full bg-red-500 px-2 text-xs leading-5 text-white ${collapsed ? "lg:absolute lg:right-0 lg:top-0 lg:px-1 lg:text-[10px]" : ""}`}>{summary.pending_profiles > 99 ? "99+" : summary.pending_profiles}</span>}
               </Link>
             );
           })}

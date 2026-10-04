@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { BriefcaseBusiness, Search, UserRound, UsersRound } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Suspense, useMemo, useState } from "react";
+import { BriefcaseBusiness, ClipboardList, LockKeyhole, RefreshCw, Search, UserRound, UserRoundCheck, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useGetAdminNotificationSummaryQuery } from "@/services/notificationApi";
 import WorkerDetailModal from "@/components/workers/WorkerDetailModal";
 import { workerName, WorkerStatusBadge } from "@/components/workers/worker-ui";
 import { useGetWorkerProfilesQuery, type WorkerListFilter } from "@/services/workerApi";
@@ -31,11 +33,26 @@ function WorkersTableSkeleton() {
   </Table>;
 }
 
-export default function WorkersPage() {
-  const [filter, setFilter] = useState<WorkerListFilter>("ALL");
+export default function WorkersPage() { return <Suspense><WorkersContent /></Suspense>; }
+function WorkersContent() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const requested = params.get("status");
+  const initialFilter: WorkerListFilter = FILTERS.find(item => item.value === requested)?.value ?? "ALL";
+  const filter = initialFilter;
+  const setFilter = (value: WorkerListFilter) => {
+    const next = new URLSearchParams(params.toString());
+    next.set("status", value);
+    next.delete("worker");
+    router.replace(`/workers?${next}`, {scroll:false});
+  };
+  const {data: summary} = useGetAdminNotificationSummaryQuery();
   const [search, setSearch] = useState("");
   const [detailWorker, setDetailWorker] = useState<WorkerProfile | null>(null);
   const { currentData: workers, isLoading, isFetching, isError, refetch } = useGetWorkerProfilesQuery(filter);
+  const { data: allWorkers, isLoading: statsLoading, isError: statsError, isFetching: statsFetching, refetch: refetchAll } = useGetWorkerProfilesQuery("ALL");
+  const linkedWorkerId = Number(params.get("worker"));
+  const shownWorker = allWorkers?.find(worker => worker.id === (detailWorker?.id ?? linkedWorkerId)) ?? detailWorker ?? null;
   const showSkeleton = isLoading || (isFetching && !workers);
   const filteredWorkers = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("vi");
@@ -43,18 +60,26 @@ export default function WorkersPage() {
     return (workers ?? []).filter((worker) => [workerName(worker), worker.username, worker.email, worker.phone_number ?? "", worker.registered_service?.name ?? ""].some((value) => value.toLocaleLowerCase("vi").includes(query)));
   }, [search, workers]);
 
-  return <div className="space-y-5 p-6">
+  const statistics = [
+    { label: "Tổng nhân viên", value: allWorkers?.length ?? 0, detail: "Toàn bộ hồ sơ nhân viên", icon: UsersRound, color: "bg-blue-50 text-blue-600" },
+    { label: "Chờ duyệt", value: allWorkers?.filter((worker) => worker.status === "PENDING").length ?? 0, detail: "Hồ sơ cần được kiểm tra", icon: ClipboardList, color: "bg-amber-50 text-amber-600" },
+    { label: "Đang làm việc", value: allWorkers?.filter((worker) => worker.status === "ACTIVE").length ?? 0, detail: "Nhân viên đã được phê duyệt", icon: UserRoundCheck, color: "bg-emerald-50 text-emerald-600" },
+    { label: "Tạm khóa", value: allWorkers?.filter((worker) => worker.status === "SUSPENDED").length ?? 0, detail: "Hồ sơ tạm ngừng hoạt động", icon: LockKeyhole, color: "bg-rose-50 text-rose-600" },
+  ];
+
+  return <div className="space-y-5">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-slate-950">Nhân viên</h1><p className="mt-1 text-sm text-slate-500">Duyệt hồ sơ, theo dõi năng lực và quản lý trạng thái làm việc.</p></div>
-      <Badge variant="outline" className="h-8 gap-2 px-3"><UsersRound className="h-4 w-4 text-blue-600" />{showSkeleton ? <Skeleton className="h-3.5 w-16" /> : `${workers?.length ?? 0} nhân viên`}</Badge>
     </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{statistics.map((statistic) => <StatCard key={statistic.label} {...statistic} value={statsError ? "—" : statistic.value} loading={statsLoading} />)}</div>
 
     <Card>
       <CardContent className="space-y-4 p-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <Tabs value={filter} onValueChange={(value) => setFilter(value as WorkerListFilter)} className="hidden xl:block"><TabsList>{FILTERS.map((item) => <TabsTrigger key={item.value} value={item.value}>{item.label}</TabsTrigger>)}</TabsList></Tabs>
+          <Tabs value={filter} onValueChange={(value) => setFilter(value as WorkerListFilter)} className="hidden xl:block"><TabsList>{FILTERS.map((item) => <TabsTrigger key={item.value} value={item.value}>{item.label}{item.value === "PENDING" && !!summary?.pending_profiles && <span className="ml-2 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">{summary.pending_profiles}</span>}</TabsTrigger>)}</TabsList></Tabs>
           <div className="xl:hidden"><Select value={filter} onValueChange={(value) => setFilter(value as WorkerListFilter)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FILTERS.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></div>
-          <div className="relative w-full xl:w-80"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên, SĐT, email, dịch vụ..." /></div>
+          <div className="flex w-full items-center gap-3 xl:w-auto"><div className="relative min-w-0 flex-1 xl:w-80"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><Input aria-label="Tìm nhân viên" className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên, SĐT, email, dịch vụ..." /></div><Button type="button" variant="outline" size="icon" className="shrink-0 cursor-pointer transition-all hover:shadow-sm active:scale-[0.97]" disabled={isFetching || statsFetching} aria-label="Làm mới danh sách nhân viên" onClick={() => { void refetch(); if (filter !== "ALL") void refetchAll(); }}><RefreshCw className={`h-4 w-4 ${isFetching || statsFetching ? "animate-spin" : ""}`} /></Button></div>
         </div>
       </CardContent>
     </Card>
@@ -65,9 +90,9 @@ export default function WorkersPage() {
     </Card>
 
     <WorkerDetailModal
-      key={detailWorker?.id ?? "closed"}
-      worker={detailWorker}
-      onClose={() => setDetailWorker(null)}
+      key={shownWorker?.id ?? "closed"}
+      worker={shownWorker}
+      onClose={() => { setDetailWorker(null); if (params.has("worker")) { const next = new URLSearchParams(params.toString()); next.delete("worker"); router.replace(`/workers${next.size ? `?${next}` : ""}`); } }}
     />
   </div>;
 }

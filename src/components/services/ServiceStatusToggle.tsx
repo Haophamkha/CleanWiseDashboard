@@ -36,12 +36,12 @@ export default function ServiceStatusToggle({
   };
   return (
     <>
-      <div className="flex w-44 shrink-0 items-center gap-2">
+      <div className="inline-flex items-center" aria-busy={isLoading}>
         <Button
           type="button"
           role="switch"
           aria-checked={isActive}
-          aria-label={`Trạng thái ${name}`}
+          aria-label={`Trạng thái ${name}: ${isActive ? "Đang bật" : "Đã tắt"}`}
           disabled={isLoading}
           onClick={() => (isActive ? setConfirmOpen(true) : update(true))}
           className={`h-6 w-11 shrink-0 rounded-full p-0 ${isActive ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-300 hover:bg-slate-400"}`}
@@ -50,10 +50,7 @@ export default function ServiceStatusToggle({
             className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${isActive ? "translate-x-2.5" : "-translate-x-2.5"}`}
           />
         </Button>
-        <span
-          aria-live="polite"
-          className={`w-28 shrink-0 whitespace-nowrap text-xs ${isActive ? "text-emerald-700" : "text-slate-500"}`}
-        >
+        <span className="sr-only" aria-live="polite">
           {isLoading ? "Đang cập nhật…" : isActive ? "Đang bật" : "Đã tắt"}
         </span>
       </div>

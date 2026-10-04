@@ -14,7 +14,7 @@ export default function RootLayout({
     <html lang="vi">
       <body suppressHydrationWarning>
         <Provider store={store}>{children}</Provider>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors toastOptions={{ classNames: { title: "whitespace-pre-line break-words" } }} />
       </body>
     </html>
   );
