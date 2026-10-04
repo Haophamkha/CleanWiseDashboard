@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  Bell,
   ChevronDown,
   KeyRound,
   LogOut,
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAppSelector } from "@/store/hooks";
 import type { UserResponse } from "@/types/Response";
+import AdminNotifications from "./AdminNotifications";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
 type TopbarProps = {
@@ -128,14 +128,7 @@ export default function Topbar({ onOpenSidebar }: TopbarProps) {
 
       {/* Right actions */}
       <div className="ml-auto flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Thông báo"
-          className="relative grid h-10 w-10 place-items-center rounded-full text-slate-500 transition hover:bg-blue-50 hover:text-blue-700"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-        </button>
+        <AdminNotifications />
 
         {/* Profile */}
         <div ref={profileRef} className="relative">

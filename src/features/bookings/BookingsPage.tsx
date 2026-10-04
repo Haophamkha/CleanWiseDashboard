@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +18,6 @@ import { useCancelAdminBookingMutation, useGetAdminBookingsQuery, useGetBookingS
 import { useGetServicesQuery } from "@/services/servicesApi";
 import { AdvancedBookingFilters } from "./AdvancedBookingFilters";
 import type { AdminUser, BookingListItem, BookingListParams } from "@/types/Booking";
-import { CreateBookingDialog } from "./CreateBookingDialog";
 import { apiError, compactDateTime, money, PaymentBadge, StatusBadge } from "./booking-ui";
 
 const statuses = ["", "PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "FAILED"];
@@ -38,7 +37,7 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
       setCancelOpen(false);
       setReason("");
     } catch (error) {
-      toast.error(apiError(error));
+      toast.error(apiError(error), { duration: 10000 });
     }
   };
 
@@ -46,8 +45,6 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500" aria-label={`Thao tác với ${booking.booking_code}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel>{booking.booking_code}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link href={`/bookings/${booking.id}`}><Eye className="h-4 w-4" />Xem chi tiết</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href={`/bookings/${booking.id}#schedules`}><UserRoundCheck className="h-4 w-4" />Quản lý phân công</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href={`/bookings/${booking.id}#booking-info`}><ClipboardEdit className="h-4 w-4" />Sửa thông tin</Link></DropdownMenuItem>
@@ -79,7 +76,7 @@ export function BookingsPage() {
   ];
 
   return <div className="space-y-6">
-    <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-bold tracking-tight text-slate-950">Đơn dịch vụ</h1><p className="mt-1 text-sm text-slate-500">Quản lý, phân công và theo dõi toàn bộ đơn dịch vụ.</p></div><CreateBookingDialog /></div>
+    <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-bold tracking-tight text-slate-950">Đơn dịch vụ</h1><p className="mt-1 text-sm text-slate-500">Quản lý, phân công và theo dõi toàn bộ đơn dịch vụ.</p></div></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map((card) => <StatCard key={card.label} {...card} />)}</div>
 
     <Card className="overflow-hidden shadow-none">

@@ -245,6 +245,7 @@ export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: axiosBaseQuery(),
   tagTypes: [
+    "Notifications",
     "Profile",
     "Categories",
     "Services",

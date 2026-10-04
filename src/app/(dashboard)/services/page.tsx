@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Pencil, Plus, RefreshCw, Search } from "lucide-react";
+import { Pencil, Plus, RefreshCw, Search, BriefcaseBusiness, CircleCheck, CirclePause } from "lucide-react";
 import ServiceThumbnail from "@/components/services/ServiceThumbnail";
 import ServiceFormModal from "@/components/services/ServiceFormModal";
 import ServiceStatusToggle from "@/components/services/ServiceStatusToggle";
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -100,17 +101,10 @@ export default function ServicesPage() {
           </Button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 text-xs">
-        <Badge variant="outline">{services.length} dịch vụ</Badge>
-        <Badge
-          variant="outline"
-          className="border-emerald-200 bg-emerald-50 text-emerald-700"
-        >
-          {services.filter((service) => service.is_active).length} đang bật
-        </Badge>
-        <Badge variant="outline">
-          {services.filter((service) => !service.is_active).length} đã tắt
-        </Badge>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Tổng dịch vụ" value={query.isError ? "—" : services.length} detail="Dịch vụ trong hệ thống" icon={BriefcaseBusiness} color="bg-blue-50 text-blue-600" loading={query.isLoading} />
+        <StatCard label="Đang bật" value={query.isError ? "—" : services.filter((service) => service.is_active).length} detail="Dịch vụ đang nhận đơn" icon={CircleCheck} color="bg-emerald-50 text-emerald-600" loading={query.isLoading} />
+        <StatCard label="Đã tắt" value={query.isError ? "—" : services.filter((service) => !service.is_active).length} detail="Dịch vụ ngừng nhận đơn mới" icon={CirclePause} color="bg-rose-50 text-rose-600" loading={query.isLoading} />
       </div>
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-4">

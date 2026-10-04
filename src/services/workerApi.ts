@@ -93,7 +93,7 @@ export const workerApi = baseApi.injectEndpoints({
       },
       // Trạng thái ACTIVE/SUSPENDED ảnh hưởng danh sách có thể phân công,
       // nhưng không cần tải lại danh sách quản lý nhân viên.
-      invalidatesTags: [{ type: "Workers", id: "AVAILABLE" }],
+      invalidatesTags: [{ type: "Workers", id: "AVAILABLE" }, "Notifications"],
     }),
   }),
 

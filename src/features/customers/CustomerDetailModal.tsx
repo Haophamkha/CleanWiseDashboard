@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { CalendarDays, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,7 +33,7 @@ export function CustomerDetailModal({ id, onClose }: { id: number; onClose: () =
                 {customer.avatar ? <Image src={customer.avatar} alt={name} fill sizes="80px" className="object-cover" unoptimized /> : <UserRound className="h-8 w-8" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><h3 className="break-words text-lg font-semibold text-slate-950">{name}</h3><Badge variant="outline" className={`gap-1.5 whitespace-nowrap ${customer.is_active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-orange-200 bg-orange-50 text-orange-700"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{customer.is_active ? "Hoạt động" : "Đã khóa"}</Badge></div>
+                <div className="flex flex-wrap items-center gap-2"><h3 className="break-words text-lg font-semibold text-slate-950">{name}</h3><StatusPill tone={customer.is_active ? "emerald" : "orange"}>{customer.is_active ? "Hoạt động" : "Đã khóa"}</StatusPill></div>
                 <p className="mt-1 break-words text-sm text-slate-500">@{customer.username}</p>
                 <div className="mt-3 flex flex-wrap gap-2"><Badge variant="outline">Mã khách hàng: {customer.id}</Badge><Badge variant="secondary">Tài khoản khách hàng</Badge></div>
               </div>

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Loader2, RefreshCw, Search, Users, UserRoundCheck, UserRoundX } from "lucide-react";
+import { Eye, RefreshCw, Search, Users, UserRoundCheck, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomerDetailModal } from "./CustomerDetailModal";
@@ -34,20 +33,19 @@ function CustomerStatus({ customer }: { customer: User }) {
       toast.success(active ? "Đã kích hoạt tài khoản khách hàng." : "Đã khóa tài khoản khách hàng.");
     } catch (error) { toast.error(apiError(error)); }
   };
-  return <div className="flex w-48 shrink-0 items-center gap-2" aria-busy={isLoading}>
+  return <div className="inline-flex items-center" aria-busy={isLoading}>
     <Button
       type="button"
       role="switch"
       aria-checked={customer.is_active}
-      aria-label={`Trạng thái tài khoản ${customerName(customer)}`}
+      aria-label={`Trạng thái tài khoản ${customerName(customer)}: ${customer.is_active ? "Đang hoạt động" : "Đã khóa"}`}
       disabled={isLoading}
       onClick={() => changeStatus(!customer.is_active)}
       className={`h-6 w-11 shrink-0 cursor-pointer rounded-full p-0 disabled:cursor-wait ${customer.is_active ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-300 hover:bg-slate-400"}`}
     >
       <span className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none ${customer.is_active ? "translate-x-2.5" : "-translate-x-2.5"}`} />
     </Button>
-    <span aria-live="polite" className={`flex w-32 shrink-0 items-center gap-1.5 whitespace-nowrap text-xs ${customer.is_active ? "text-emerald-700" : "text-slate-500"}`}>
-      {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+    <span className="sr-only" aria-live="polite">
       {isLoading ? "Đang cập nhật…" : customer.is_active ? "Đang hoạt động" : "Đã khóa"}
     </span>
   </div>;
@@ -71,7 +69,7 @@ export function CustomersPage() {
   ];
 
   return <div className="space-y-5">
-    <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-bold text-slate-950">Khách hàng</h1><p className="mt-1 text-sm text-slate-500">Xem hồ sơ và quản lý trạng thái hoạt động của tài khoản khách hàng.</p></div><Badge variant="outline" className="h-8 gap-2 px-3"><Users className="h-4 w-4 text-blue-600" />{isLoading ? <Skeleton className="h-3.5 w-16" /> : `${isError ? "—" : allCustomers.length} khách hàng`}</Badge></div>
+    <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-bold text-slate-950">Khách hàng</h1><p className="mt-1 text-sm text-slate-500">Xem hồ sơ và quản lý trạng thái hoạt động của tài khoản khách hàng.</p></div></div>
     <div className="grid gap-4 sm:grid-cols-3">{statistics.map((statistic) => <StatCard key={statistic.label} {...statistic} value={isError ? "—" : statistic.value} loading={isLoading} />)}</div>
     <Card>
       <CardContent className="flex flex-wrap items-center gap-3 p-4">

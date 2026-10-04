@@ -48,7 +48,7 @@ export function CreateBookingDialog() {
     try {
       const booking = await createBooking({ customer_id: customerId, service_id: serviceId, address_id: addressId, delivery_address_id: deliveryAddressId || null, service_data: serviceData, note, voucher_code: voucher, payment_method: paymentMethod }).unwrap();
       toast.success("Đã tạo đơn dịch vụ."); setOpen(false); router.push(`/bookings/${booking.id}`);
-    } catch (error) { toast.error(apiError(error)); }
+    } catch (error) { toast.error(apiError(error), { duration: 10000 }); }
   };
 
   return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button><Plus className="h-4 w-4" />Tạo đơn mới</Button></DialogTrigger><DialogContent className="max-w-3xl"><DialogHeader><DialogTitle>Tạo đơn thay khách hàng</DialogTitle><DialogDescription>Chọn khách hàng, địa chỉ và nhập thông tin theo biểu mẫu của dịch vụ.</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-5">

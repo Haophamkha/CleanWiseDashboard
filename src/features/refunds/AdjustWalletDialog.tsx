@@ -12,8 +12,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { apiError, Field, selectClass } from "@/features/bookings/booking-ui";
+import { apiError, Field } from "@/features/bookings/booking-ui";
 import {
   useAdjustWalletMutation,
   useGetWalletTargetsQuery,
@@ -142,15 +143,14 @@ export function AdjustWalletDialog({
                     placeholder="Tên, số điện thoại hoặc email"
                   />
                 </div>
-                <select
-                  className={`${selectClass} w-36`}
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <option value="">Tất cả</option>
-                  <option value="CUSTOMER">Khách hàng</option>
-                  <option value="WORKER">Nhân viên</option>
-                </select>
+                <Select value={role || "ALL"} onValueChange={(value) => setRole(value === "ALL" ? "" : value)}>
+                  <SelectTrigger className="w-36" aria-label="Loại chủ ví"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Tất cả</SelectItem>
+                    <SelectItem value="CUSTOMER">Khách hàng</SelectItem>
+                    <SelectItem value="WORKER">Nhân viên</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="max-h-56 space-y-1 overflow-y-auto">
                 {isFetching && (
