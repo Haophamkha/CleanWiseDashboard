@@ -1,4 +1,3 @@
-// ComplaintsPage.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,11 +5,18 @@ import { useGetComplaintsQuery } from "@/services/complaintApi";
 import { ComplaintsFilter } from "./ComplaintsFilter";
 import { ComplaintsTable } from "./ComplaintsTable";
 import { ComplaintResolveModal } from "./ComplaintResolveModal";
-import type { ComplaintStage, ComplaintStatus } from "@/types/Complaint";
+import type {
+  ComplaintReporterRole,
+  ComplaintStage,
+  ComplaintStatus,
+} from "@/types/Complaint";
 
 export function ComplaintsPage() {
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | "">("");
   const [stageFilter, setStageFilter] = useState<ComplaintStage | "">("");
+  const [reporterFilter, setReporterFilter] = useState<
+    ComplaintReporterRole | ""
+  >("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const {
@@ -20,10 +26,13 @@ export function ComplaintsPage() {
   } = useGetComplaintsQuery({
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(stageFilter ? { stage: stageFilter } : {}),
+    ...(reporterFilter ? { reporter_role: reporterFilter } : {}),
   });
 
   const pendingCount =
     complaints?.filter((c) => c.status === "PENDING").length ?? 0;
+  const workerCount =
+    complaints?.filter((c) => c.reporter_role === "WORKER").length ?? 0;
 
   return (
     <div className="space-y-5">
@@ -36,16 +45,18 @@ export function ComplaintsPage() {
             {isLoading
               ? "Đang tải dữ liệu..."
               : `${complaints?.length ?? 0} khiếu nại${
-                  pendingCount > 0 ? ` · ${pendingCount} đang chờ xử lý` : ""
-                }`}
+                  workerCount > 0 ? ` · ${workerCount} từ nhân viên` : ""
+                }${pendingCount > 0 ? ` · ${pendingCount} đang chờ xử lý` : ""}`}
           </p>
         </div>
 
         <ComplaintsFilter
           status={statusFilter}
           stage={stageFilter}
+          reporterRole={reporterFilter}
           onStatusChange={setStatusFilter}
           onStageChange={setStageFilter}
+          onReporterRoleChange={setReporterFilter}
         />
       </div>
 

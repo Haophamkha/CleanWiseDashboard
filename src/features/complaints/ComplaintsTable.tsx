@@ -7,6 +7,9 @@ interface ComplaintsTableProps {
   onSelect: (id: number) => void;
 }
 
+const TH =
+  "px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500";
+
 export function ComplaintsTable({
   complaints,
   onSelect,
@@ -45,24 +48,14 @@ export function ComplaintsTable({
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/60">
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Mã
-              </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Booking
-              </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Lý do
-              </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Giai đoạn
-              </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Trạng thái
-              </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Ngày tạo
-              </th>
+              <th className={TH}>Mã</th>
+              <th className={TH}>Booking</th>
+              <th className={TH}>Người gửi</th>
+              <th className={TH}>Nhân viên liên quan</th>
+              <th className={TH}>Lý do</th>
+              <th className={TH}>Giai đoạn</th>
+              <th className={TH}>Trạng thái</th>
+              <th className={TH}>Ngày tạo</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>

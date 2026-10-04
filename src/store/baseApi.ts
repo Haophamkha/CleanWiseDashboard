@@ -255,6 +255,7 @@ export const baseApi = createApi({
     "Vouchers",
     "Reviews",
     "Complaints",
+    "Wallets",
   ],
   endpoints: () => ({}),
 });

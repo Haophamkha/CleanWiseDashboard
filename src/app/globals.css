@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --background: #ffffff;
@@ -12,10 +13,67 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Animation tự định nghĩa cho trang đăng nhập (tw-animate-css không có các hiệu ứng này) */
+@theme {
+  --animate-bg-zoom: bg-zoom 30s ease-in-out infinite alternate;
+  --animate-float: float 12s ease-in-out infinite;
+  --animate-float-slow: float 16s ease-in-out infinite reverse;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-progress: progress 1.4s ease-in-out infinite;
+
+  @keyframes bg-zoom {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.08);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(30px, 20px);
+    }
+  }
+  @keyframes progress {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(250%);
+    }
+  }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Tôn trọng người dùng tắt hiệu ứng chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 /* Scrollbar mảnh dành riêng cho các vùng điều hướng có nền tối. */
