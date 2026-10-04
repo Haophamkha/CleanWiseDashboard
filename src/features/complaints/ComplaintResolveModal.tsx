@@ -68,11 +68,14 @@ export function ComplaintResolveModal({
     invalid: false,
   });
 
+  const isWorkerReporter = detail?.reporter_role === "WORKER";
+
   const handleResolve = async (status: ResolveComplaintRequest["status"]) => {
     setError(null);
 
-    // Hoàn tiền chỉ đi kèm trạng thái "Đã xử lý xong" (BE từ chối với trạng thái khác).
-    const withRefund = status === "RESOLVED";
+    // Hoàn tiền chỉ đi kèm "Đã xử lý xong" và chỉ với khiếu nại của khách
+    // (BE từ chối các trường hợp còn lại).
+    const withRefund = status === "RESOLVED" && !isWorkerReporter;
 
     if (withRefund && refund.invalid) {
       setError(
@@ -148,10 +151,30 @@ export function ComplaintResolveModal({
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-700">Khách hàng</p>
+              <p className="text-sm font-medium text-gray-700">Người gửi</p>
 
               <p className="text-sm text-gray-600">
-                {detail.customer_name || `#${detail.customer}`}
+                <span
+                  className={`mr-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                    isWorkerReporter
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  {isWorkerReporter ? "Nhân viên" : "Khách hàng"}
+                </span>
+                {detail.reporter_name || `#${detail.reporter}`}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                Nhân viên liên quan
+              </p>
+
+              <p className="text-sm text-gray-600">
+                {detail.worker_name ||
+                  (detail.worker ? `#${detail.worker}` : "Chưa xác định")}
               </p>
             </div>
 
@@ -177,7 +200,7 @@ export function ComplaintResolveModal({
 
             <div>
               <p className="text-sm font-medium text-gray-700">
-                Nội dung khách phản ánh
+                Nội dung người gửi phản ánh
               </p>
 
               {detail.content ? (
@@ -186,7 +209,7 @@ export function ComplaintResolveModal({
                 </p>
               ) : (
                 <p className="mt-1 text-sm italic text-gray-400">
-                  Khách không nhập nội dung bổ sung.
+                  Người gửi không nhập nội dung bổ sung.
                 </p>
               )}
             </div>
@@ -281,22 +304,29 @@ export function ComplaintResolveModal({
                   className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
 
-                <div className="space-y-1">
-                  <ComplaintRefundField
-                    bookingId={detail.booking}
-                    onChange={(value) => {
-                      setRefund(value);
-
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                  />
-
-                  <p className="text-xs text-gray-400">
-                    Tiền chỉ được hoàn khi bấm &ldquo;Đã xử lý xong&rdquo;.
+                {isWorkerReporter ? (
+                  <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                    Khiếu nại do nhân viên gửi, không áp dụng hoàn tiền vào ví
+                    khách.
                   </p>
-                </div>
+                ) : (
+                  <div className="space-y-1">
+                    <ComplaintRefundField
+                      bookingId={detail.booking}
+                      onChange={(value) => {
+                        setRefund(value);
+
+                        if (error) {
+                          setError(null);
+                        }
+                      }}
+                    />
+
+                    <p className="text-xs text-gray-400">
+                      Tiền chỉ được hoàn khi bấm &ldquo;Đã xử lý xong&rdquo;.
+                    </p>
+                  </div>
+                )}
 
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -318,7 +348,7 @@ export function ComplaintResolveModal({
 
             {detail.status === "CANCELLED" && (
               <p className="border-t border-gray-100 pt-4 text-sm text-gray-500">
-                Khiếu nại đã được khách hàng hủy.
+                Khiếu nại đã được người gửi hủy.
               </p>
             )}
 
