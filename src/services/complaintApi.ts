@@ -84,7 +84,9 @@ export const complaintApi = baseApi.injectEndpoints({
       transformResponse: (response: unknown) =>
         unwrapResponse<ComplaintDetail>(response),
 
-      invalidatesTags: (_result, _error, { id }) => [
+      // Khi xử lý kèm hoàn tiền, đơn (refunded_amount, trạng thái thanh toán,
+      // lịch sử) và danh sách giao dịch ví đều thay đổi nên cần tải lại.
+      invalidatesTags: (result, _error, { id }) => [
         {
           type: "Complaints",
           id,
@@ -93,6 +95,15 @@ export const complaintApi = baseApi.injectEndpoints({
           type: "Complaints",
           id: "LIST",
         },
+        ...(result
+          ? [
+              { type: "Bookings" as const, id: result.booking },
+              { type: "Bookings" as const, id: `TIMELINE-${result.booking}` },
+            ]
+          : []),
+        { type: "Bookings", id: "LIST" },
+        { type: "Wallets", id: "LIST" },
+        { type: "Wallets", id: "TARGETS" },
       ],
     }),
   }),

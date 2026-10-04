@@ -1,5 +1,5 @@
 // ComplaintRow.tsx
-import type { Complaint } from "@/types/Complaint";
+import type { Complaint, ComplaintReporterRole } from "@/types/Complaint";
 import { ComplaintStatusBadge } from "./ComplaintStatusBadge";
 
 interface ComplaintRowProps {
@@ -7,7 +7,17 @@ interface ComplaintRowProps {
   onSelect: (id: number) => void;
 }
 
+const ROLE_STYLE: Record<
+  ComplaintReporterRole,
+  { label: string; className: string }
+> = {
+  CUSTOMER: { label: "Khách", className: "bg-blue-50 text-blue-700" },
+  WORKER: { label: "Nhân viên", className: "bg-amber-50 text-amber-700" },
+};
+
 export function ComplaintRow({ complaint, onSelect }: ComplaintRowProps) {
+  const role = ROLE_STYLE[complaint.reporter_role] ?? ROLE_STYLE.CUSTOMER;
+
   return (
     <tr
       onClick={() => onSelect(complaint.id)}
@@ -19,6 +29,22 @@ export function ComplaintRow({ complaint, onSelect }: ComplaintRowProps) {
 
       <td className="px-4 py-3.5 text-sm text-gray-600">
         #{complaint.booking}
+      </td>
+
+      <td className="px-4 py-3.5 text-sm">
+        <span
+          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${role.className}`}
+        >
+          {role.label}
+        </span>
+        <div className="mt-1 text-gray-900">
+          {complaint.reporter_name || "—"}
+        </div>
+      </td>
+
+      <td className="px-4 py-3.5 text-sm text-gray-600">
+        {complaint.worker_name ||
+          (complaint.worker ? `#${complaint.worker}` : "—")}
       </td>
 
       <td className="px-4 py-3.5 text-sm">

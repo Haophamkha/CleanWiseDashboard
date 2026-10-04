@@ -7,9 +7,9 @@ import {
   Settings,
   Sparkles,
   TicketPercent,
-  Undo2,
   UserCog,
   Users,
+  Wallet,
 } from "lucide-react";
 
 export type NavItem = {
@@ -54,11 +54,11 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Danh mục dịch vụ, bảng giá và cấu hình thời lượng từng gói.",
   },
   {
-    label: "Hoàn tiền",
+    label: "Ví & hoàn tiền",
     href: "/refunds",
-    icon: Undo2,
+    icon: Wallet,
     description:
-      "Yêu cầu hoàn tiền của khách hàng: duyệt, từ chối và theo dõi trạng thái hoàn.",
+      "Theo dõi giao dịch ví của khách hàng và nhân viên: hoàn tiền, điều chỉnh số dư, đối soát.",
   },
   {
     label: "Thanh toán",

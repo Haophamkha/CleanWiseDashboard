@@ -1,5 +1,9 @@
 // ComplaintsFilter.tsx
-import type { ComplaintStage, ComplaintStatus } from "@/types/Complaint";
+import type {
+  ComplaintReporterRole,
+  ComplaintStage,
+  ComplaintStatus,
+} from "@/types/Complaint";
 
 const STATUS_OPTIONS: { value: ComplaintStatus | ""; label: string }[] = [
   { value: "", label: "Tất cả trạng thái" },
@@ -17,11 +21,20 @@ const STAGE_OPTIONS: { value: ComplaintStage | ""; label: string }[] = [
   { value: "AFTER_SERVICE", label: "Sau khi hoàn thành" },
 ];
 
+const REPORTER_OPTIONS: { value: ComplaintReporterRole | ""; label: string }[] =
+  [
+    { value: "", label: "Tất cả người gửi" },
+    { value: "CUSTOMER", label: "Khách hàng" },
+    { value: "WORKER", label: "Nhân viên" },
+  ];
+
 interface ComplaintsFilterProps {
   status: ComplaintStatus | "";
   stage: ComplaintStage | "";
+  reporterRole: ComplaintReporterRole | "";
   onStatusChange: (value: ComplaintStatus | "") => void;
   onStageChange: (value: ComplaintStage | "") => void;
+  onReporterRoleChange: (value: ComplaintReporterRole | "") => void;
 }
 
 function FilterSelect<T extends string>({
@@ -65,11 +78,18 @@ function FilterSelect<T extends string>({
 export function ComplaintsFilter({
   status,
   stage,
+  reporterRole,
   onStatusChange,
   onStageChange,
+  onReporterRoleChange,
 }: ComplaintsFilterProps) {
   return (
     <div className="flex flex-wrap gap-2">
+      <FilterSelect
+        value={reporterRole}
+        options={REPORTER_OPTIONS}
+        onChange={onReporterRoleChange}
+      />
       <FilterSelect
         value={status}
         options={STATUS_OPTIONS}
