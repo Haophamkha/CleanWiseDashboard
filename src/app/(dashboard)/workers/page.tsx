@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BriefcaseBusiness, Search, UserRound, UsersRound } from "lucide-react";
+import { BriefcaseBusiness, ClipboardList, LockKeyhole, Search, UserRound, UserRoundCheck, UsersRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WorkerDetailModal from "@/components/workers/WorkerDetailModal";
@@ -36,6 +37,7 @@ export default function WorkersPage() {
   const [search, setSearch] = useState("");
   const [detailWorker, setDetailWorker] = useState<WorkerProfile | null>(null);
   const { currentData: workers, isLoading, isFetching, isError, refetch } = useGetWorkerProfilesQuery(filter);
+  const { data: allWorkers, isLoading: statsLoading, isError: statsError } = useGetWorkerProfilesQuery("ALL");
   const showSkeleton = isLoading || (isFetching && !workers);
   const filteredWorkers = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("vi");
@@ -43,11 +45,20 @@ export default function WorkersPage() {
     return (workers ?? []).filter((worker) => [workerName(worker), worker.username, worker.email, worker.phone_number ?? "", worker.registered_service?.name ?? ""].some((value) => value.toLocaleLowerCase("vi").includes(query)));
   }, [search, workers]);
 
-  return <div className="space-y-5 p-6">
+  const statistics = [
+    { label: "Tổng nhân viên", value: allWorkers?.length ?? 0, detail: "Toàn bộ hồ sơ nhân viên", icon: UsersRound, color: "bg-blue-50 text-blue-600" },
+    { label: "Chờ duyệt", value: allWorkers?.filter((worker) => worker.status === "PENDING").length ?? 0, detail: "Hồ sơ cần được kiểm tra", icon: ClipboardList, color: "bg-amber-50 text-amber-600" },
+    { label: "Đang làm việc", value: allWorkers?.filter((worker) => worker.status === "ACTIVE").length ?? 0, detail: "Nhân viên đã được phê duyệt", icon: UserRoundCheck, color: "bg-emerald-50 text-emerald-600" },
+    { label: "Tạm khóa", value: allWorkers?.filter((worker) => worker.status === "SUSPENDED").length ?? 0, detail: "Hồ sơ tạm ngừng hoạt động", icon: LockKeyhole, color: "bg-rose-50 text-rose-600" },
+  ];
+
+  return <div className="space-y-5">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-slate-950">Nhân viên</h1><p className="mt-1 text-sm text-slate-500">Duyệt hồ sơ, theo dõi năng lực và quản lý trạng thái làm việc.</p></div>
       <Badge variant="outline" className="h-8 gap-2 px-3"><UsersRound className="h-4 w-4 text-blue-600" />{showSkeleton ? <Skeleton className="h-3.5 w-16" /> : `${workers?.length ?? 0} nhân viên`}</Badge>
     </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{statistics.map((statistic) => <StatCard key={statistic.label} {...statistic} value={statsError ? "—" : statistic.value} loading={statsLoading} />)}</div>
 
     <Card>
       <CardContent className="space-y-4 p-4">

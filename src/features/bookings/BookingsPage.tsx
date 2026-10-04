@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarClock, ChevronLeft, ChevronRight, ClipboardEdit, ClipboardList, Copy, Eye, MoreHorizontal, RefreshCw, Search, SlidersHorizontal, UserRoundCheck, UserRoundX, X } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, ClipboardEdit, ClipboardList, Copy, Eye, MoreHorizontal, RefreshCw, Search, UserRoundCheck, UserRoundX, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,12 +11,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCancelAdminBookingMutation, useGetAdminBookingsQuery, useGetBookingSummaryQuery } from "@/services/bookingApi";
 import { useGetServicesQuery } from "@/services/servicesApi";
-import { useGetWorkerProfilesQuery } from "@/services/workerApi";
-import type { BookingListItem, BookingListParams } from "@/types/Booking";
+import { AdvancedBookingFilters } from "./AdvancedBookingFilters";
+import type { AdminUser, BookingListItem, BookingListParams } from "@/types/Booking";
 import { CreateBookingDialog } from "./CreateBookingDialog";
 import { apiError, compactDateTime, money, PaymentBadge, StatusBadge } from "./booking-ui";
 
@@ -63,13 +64,13 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
 export function BookingsPage() {
   const [filters, setFilters] = useState<BookingListParams>({ page: 1, page_size: 20, ordering: "-created_at" });
   const [search, setSearch] = useState("");
+  const [selectedWorker, setSelectedWorker] = useState<AdminUser>();
   const { data, isLoading, isFetching, refetch } = useGetAdminBookingsQuery(filters);
   const { data: summary } = useGetBookingSummaryQuery();
   const { data: services } = useGetServicesQuery();
-  const { data: workers } = useGetWorkerProfilesQuery("ACTIVE");
-  const update = (key: keyof BookingListParams, value: unknown) => setFilters((current) => ({ ...current, [key]: value || undefined, page: 1 }));
-  const resetFilters = () => { setSearch(""); setFilters({ page: 1, page_size: 20, ordering: "-created_at" }); };
-  const hasActiveFilters = Boolean(filters.search || filters.status || filters.payment_status || filters.service_id || filters.worker_id || filters.unassigned !== undefined || filters.created_from || filters.created_to);
+  const update = (key: keyof BookingListParams, value: unknown) => setFilters((current) => ({ ...current, [key]: value === "" || value == null ? undefined : value, page: 1 }));
+  const resetFilters = () => { setSearch(""); setSelectedWorker(undefined); setFilters({ page: 1, page_size: 20, ordering: "-created_at" }); };
+  const hasActiveFilters = Boolean(filters.search || filters.status || filters.payment_status || filters.service_id || filters.worker_id || filters.unassigned !== undefined || filters.created_from || filters.created_to || (filters.ordering ?? "-created_at") !== "-created_at");
   const cards = [
     { label: "Đơn hôm nay", value: summary?.today_total ?? 0, detail: "Đơn mới được tạo", icon: ClipboardList, color: "bg-blue-50 text-blue-600" },
     { label: "Chờ xử lý", value: summary?.pending ?? 0, detail: "Cần được theo dõi", icon: CalendarClock, color: "bg-amber-50 text-amber-600" },
@@ -79,17 +80,19 @@ export function BookingsPage() {
 
   return <div className="space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-bold tracking-tight text-slate-950">Đơn dịch vụ</h1><p className="mt-1 text-sm text-slate-500">Quản lý, phân công và theo dõi toàn bộ đơn dịch vụ.</p></div><CreateBookingDialog /></div>
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(({ label, value, detail, icon: Icon, color }) => <Card key={label} className="shadow-none"><CardContent className="flex items-center justify-between p-5"><div><p className="text-sm font-medium text-slate-500">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{value}</p><p className="mt-1 text-xs text-slate-400">{detail}</p></div><span className={`rounded-xl p-3 ${color}`}><Icon className="h-5 w-5" /></span></CardContent></Card>)}</div>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map((card) => <StatCard key={card.label} {...card} />)}</div>
 
     <Card className="overflow-hidden shadow-none">
       <div className="border-b border-slate-200 bg-white px-5 pt-5">
         <div className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">{statuses.map((status) => <button key={status} type="button" onClick={() => update("status", status)} className={`h-8 shrink-0 rounded-md px-3 text-sm font-medium transition-all ${(filters.status ?? "") === status ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}>{statusLabels[status]}</button>)}</div>
-        <div className="grid gap-3 py-4 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.5fr)_repeat(3,minmax(150px,1fr))_auto]">
+        <div className="grid gap-3 py-4 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.5fr)_repeat(2,minmax(150px,1fr))_auto]">
           <form className="relative" onSubmit={(event) => { event.preventDefault(); update("search", search); }}><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm mã đơn, khách hàng..." /></form>
           <Select value={filters.service_id ? String(filters.service_id) : "all"} onValueChange={(value) => update("service_id", value === "all" ? undefined : Number(value))}><SelectTrigger><SelectValue placeholder="Dịch vụ" /></SelectTrigger><SelectContent><SelectItem value="all">Tất cả dịch vụ</SelectItem>{services?.data.map((service) => <SelectItem key={service.id} value={String(service.id)}>{service.name}</SelectItem>)}</SelectContent></Select>
-          <Select value={filters.worker_id ? String(filters.worker_id) : "all"} onValueChange={(value) => update("worker_id", value === "all" ? undefined : Number(value))}><SelectTrigger><SelectValue placeholder="Nhân viên" /></SelectTrigger><SelectContent><SelectItem value="all">Tất cả nhân viên</SelectItem>{workers?.map((worker) => <SelectItem key={worker.user_id} value={String(worker.user_id)}>{`${worker.first_name} ${worker.last_name}`.trim() || worker.username}</SelectItem>)}</SelectContent></Select>
           <Select value={filters.payment_status ?? "all"} onValueChange={(value) => update("payment_status", value === "all" ? undefined : value)}><SelectTrigger><SelectValue placeholder="Thanh toán" /></SelectTrigger><SelectContent><SelectItem value="all">Mọi thanh toán</SelectItem><SelectItem value="UNPAID">Chưa thanh toán</SelectItem><SelectItem value="PAID">Đã thanh toán</SelectItem><SelectItem value="REFUNDED">Đã hoàn tiền</SelectItem></SelectContent></Select>
-          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="px-3"><SlidersHorizontal className="h-4 w-4" />Bộ lọc</Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72 p-3"><DropdownMenuLabel className="px-0">Bộ lọc nâng cao</DropdownMenuLabel><div className="mt-2 space-y-3"><label className="block space-y-1 text-xs font-medium text-slate-500"><span>Từ ngày tạo</span><Input type="date" value={filters.created_from ?? ""} onChange={(event) => update("created_from", event.target.value)} /></label><label className="block space-y-1 text-xs font-medium text-slate-500"><span>Đến ngày tạo</span><Input type="date" value={filters.created_to ?? ""} onChange={(event) => update("created_to", event.target.value)} /></label><Select value={filters.unassigned === undefined ? "all" : String(filters.unassigned)} onValueChange={(value) => update("unassigned", value === "all" ? undefined : value === "true")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Mọi phân công</SelectItem><SelectItem value="true">Còn buổi chưa gán</SelectItem><SelectItem value="false">Đã gán đầy đủ</SelectItem></SelectContent></Select><Select value={filters.ordering ?? "-created_at"} onValueChange={(value) => update("ordering", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="-created_at">Mới nhất</SelectItem><SelectItem value="created_at">Cũ nhất</SelectItem><SelectItem value="-total_amount">Giá trị cao nhất</SelectItem><SelectItem value="next_schedule_start">Lịch gần nhất</SelectItem></SelectContent></Select></div></DropdownMenuContent></DropdownMenu>
+          <AdvancedBookingFilters filters={filters} worker={selectedWorker} onApply={(advanced, worker) => {
+            setSelectedWorker(worker);
+            setFilters((current) => ({ ...current, ...advanced, page: 1 }));
+          }} />
         </div>
         {hasActiveFilters && <div className="flex items-center gap-2 pb-4 text-xs text-slate-500"><span>Đang áp dụng bộ lọc</span><Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={resetFilters}><X className="h-3.5 w-3.5" />Xóa tất cả</Button></div>}
       </div>

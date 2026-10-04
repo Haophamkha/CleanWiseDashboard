@@ -1,4 +1,5 @@
 import { baseApi } from "@/store/baseApi";
+import type { AdminUser } from "@/types/Booking";
 import type { Assignment, AvailableWorker, BookingActivity, BookingDetail, BookingListItem, BookingListParams, BookingSummary, CreateBookingPayload, CustomerSearchItem, PageResult, Schedule } from "@/types/Booking";
 
 const unwrap = <T,>(response: unknown): T => {
@@ -15,6 +16,11 @@ const availableWorkersTag = { type: "Workers" as const, id: "AVAILABLE" };
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    searchBookingWorkers: builder.query<PageResult<AdminUser>, { search: string; page: number }>({
+      query: (params) => ({ url: "/api/admin/workers/search/", method: "GET", params: { ...params, page_size: 20 } }),
+      transformResponse: unwrap,
+      providesTags: [{ type: "Workers", id: "AVAILABLE" }],
+    }),
     getBookingSummary: builder.query<BookingSummary, void>({ query: () => ({ url: "/api/admin/bookings/summary/", method: "GET" }), transformResponse: unwrap, providesTags: [{ type: "Bookings", id: "SUMMARY" }] }),
     getAdminBookings: builder.query<PageResult<BookingListItem>, BookingListParams>({ query: (params) => ({ url: "/api/admin/bookings/", method: "GET", params }), transformResponse: unwrap, providesTags: (result) => result ? [...result.results.map(({ id }) => ({ type: "Bookings" as const, id })), { type: "Bookings" as const, id: "LIST" }] : [{ type: "Bookings", id: "LIST" }] }),
     getAdminBookingDetail: builder.query<BookingDetail, number>({ query: (id) => ({ url: `/api/admin/bookings/${id}/`, method: "GET" }), transformResponse: unwrap, providesTags: (_r, _e, id) => [{ type: "Bookings", id }] }),
@@ -32,4 +38,4 @@ export const bookingApi = baseApi.injectEndpoints({
   }), overrideExisting: false,
 });
 
-export const { useGetBookingSummaryQuery, useGetAdminBookingsQuery, useGetAdminBookingDetailQuery, useGetBookingTimelineQuery, useGetAvailableWorkersQuery, useSearchCustomersQuery, useCreateAdminBookingMutation, useUpdateAdminBookingMutation, useCancelAdminBookingMutation, useUpdateAdminScheduleMutation, useAssignWorkerMutation, useUnassignWorkerMutation, useCompleteScheduleMutation, useBulkAssignMutation } = bookingApi;
+export const { useSearchBookingWorkersQuery, useGetBookingSummaryQuery, useGetAdminBookingsQuery, useGetAdminBookingDetailQuery, useGetBookingTimelineQuery, useGetAvailableWorkersQuery, useSearchCustomersQuery, useCreateAdminBookingMutation, useUpdateAdminBookingMutation, useCancelAdminBookingMutation, useUpdateAdminScheduleMutation, useAssignWorkerMutation, useUnassignWorkerMutation, useCompleteScheduleMutation, useBulkAssignMutation } = bookingApi;

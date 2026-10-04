@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ProfileInfoCard as InfoCard } from "@/components/ui/profile-info-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateWorkerStatusMutation } from "@/services/workerApi";
@@ -129,10 +130,6 @@ function ProfileContent({ worker }: { worker: WorkerProfile }) {
 
     <section><h4 className="mb-3 text-sm font-semibold text-slate-900">Giấy tờ hồ sơ</h4><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><DocumentCard label="Ảnh chân dung" url={worker.portrait} /><DocumentCard label="CCCD mặt trước" url={worker.identity_front} /><DocumentCard label="CCCD mặt sau" url={worker.identity_back} /><DocumentCard label="Chứng chỉ" url={worker.certificate_file} isPdf={isPdf(worker.certificate_file)} /></div></section>
   </div>;
-}
-
-function InfoCard({ icon: Icon, label, value }: { icon: typeof Phone; label: string; value: string }) {
-  return <div className="min-w-0 rounded-lg border border-slate-200 p-3"><p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400"><Icon className="h-3.5 w-3.5" />{label}</p><p className="mt-1.5 truncate text-sm font-medium text-slate-800" title={value}>{value}</p></div>;
 }
 
 function DocumentCard({ label, url, isPdf }: { label: string; url: string | null; isPdf?: boolean }) {
