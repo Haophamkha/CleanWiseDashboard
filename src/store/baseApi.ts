@@ -10,13 +10,12 @@ import type { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react";
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { toast } from "sonner";
+const NGROK_HEADERS = { "ngrok-skip-browser-warning": "true" };
 
 const axiosInstance = axios.create({
   baseURL: ENV.API_URL,
-  // Các mutation admin có thể gồm nhiều cập nhật DB và hoàn tiền. Backend đã
-  // tách push notification khỏi request, nhưng vẫn cho một khoảng chờ đủ an toàn
-  // để tránh hiển thị Network Error trong khi server đang hoàn tất transaction.
   timeout: 30000,
+  headers: NGROK_HEADERS,
 });
 
 // File downloads use the same authenticated client and token refresh as JSON requests.
@@ -82,7 +81,7 @@ export const performLogout = async (): Promise<void> => {
       await axios.post(
         `${ENV.API_URL}${LOGOUT_URL}`,
         { refresh },
-        { timeout: 3000 },
+        { timeout: 3000, headers: NGROK_HEADERS },
       );
     } catch {}
   }
@@ -109,7 +108,7 @@ const doRefresh = async (): Promise<string> => {
   const response = await axios.post(
     `${ENV.API_URL}${REFRESH_URL}`,
     { refresh },
-    { timeout: 10000 },
+    { timeout: 10000, headers: NGROK_HEADERS },
   );
 
   const data = response.data?.data ?? response.data;
