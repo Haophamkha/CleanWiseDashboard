@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
+import { UserWalletPanel } from "@/features/refunds/UserWalletPanel";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -282,6 +283,7 @@ export default function WorkerDetailModal({
                   <>
                     <TabsTrigger value="schedule">Lịch làm việc</TabsTrigger>
                     <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
+                    <TabsTrigger value="wallet">Ví</TabsTrigger>
                   </>
                 )}
               </TabsList>
@@ -328,6 +330,14 @@ export default function WorkerDetailModal({
                 >
                   {visibleTab === "schedule" && (
                     <WorkerSchedulePanel workerId={worker.user_id} />
+                  )}
+                </TabsContent>
+                <TabsContent
+                  value="wallet"
+                  className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 py-5"
+                >
+                  {visibleTab === "wallet" && (
+                    <UserWalletPanel userId={worker.user_id} />
                   )}
                 </TabsContent>
               </>

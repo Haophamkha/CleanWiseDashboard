@@ -2,7 +2,9 @@ import { baseApi } from "@/store/baseApi";
 import type {
   Complaint,
   ComplaintDetail,
+  ComplaintPreview,
   GetComplaintsParams,
+  GetComplaintPreviewParams,
   ResolveComplaintRequest,
 } from "@/types/Complaint";
 
@@ -71,6 +73,22 @@ export const complaintApi = baseApi.injectEndpoints({
       ],
     }),
 
+    getComplaintPreview: builder.query<
+      ComplaintPreview,
+      GetComplaintPreviewParams
+    >({
+      query: ({ id, ...params }) => ({
+        url: `${BASE_PATH}/${id}/preview/`,
+        method: "GET",
+        params,
+      }),
+
+      transformResponse: (response: unknown) =>
+        unwrapResponse<ComplaintPreview>(response),
+
+      keepUnusedDataFor: 0,
+    }),
+
     resolveComplaint: builder.mutation<
       ComplaintDetail,
       ResolveComplaintRequest
@@ -114,5 +132,6 @@ export const complaintApi = baseApi.injectEndpoints({
 export const {
   useGetComplaintsQuery,
   useGetComplaintDetailQuery,
+  useGetComplaintPreviewQuery,
   useResolveComplaintMutation,
 } = complaintApi;
