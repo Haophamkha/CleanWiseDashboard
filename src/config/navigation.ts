@@ -54,11 +54,11 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Danh mục dịch vụ, bảng giá và cấu hình thời lượng từng gói.",
   },
   {
-    label: "Ví & hoàn tiền",
+    label: "Giao dịch ví",
     href: "/refunds",
     icon: Wallet,
     description:
-      "Theo dõi giao dịch ví của khách hàng và nhân viên: hoàn tiền, điều chỉnh số dư, đối soát.",
+      "Theo dõi giao dịch ví của khách hàng và nhân viên. Hoàn tiền và thu hồi tiền được xử lý trong mục Khiếu nại.",
   },
   {
     label: "Thanh toán",

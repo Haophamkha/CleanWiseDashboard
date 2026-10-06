@@ -1,3 +1,2 @@
-export { AdjustWalletDialog } from "./AdjustWalletDialog";
-export { RefundBookingDialog } from "./RefundBookingDialog";
+export { UserWalletPanel } from "./UserWalletPanel";
 export { WalletsPage } from "./WalletsPage";

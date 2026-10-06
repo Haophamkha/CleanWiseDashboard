@@ -27,8 +27,15 @@ export default function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
-  const {data: summary} = useGetAdminNotificationSummaryQuery();
+
+  const { data: summary } = useGetAdminNotificationSummaryQuery();
+
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const badgeCounts: Record<string, number> = {
+    "/workers": summary?.pending_profiles ?? 0,
+    "/complaints": summary?.pending_complaints ?? 0,
+  };
 
   useEffect(() => {
     if (DEBUG) console.log("[Sidebar] collapsed =", collapsed);
@@ -41,12 +48,14 @@ export default function Sidebar({
         onToggleCollapse: typeof onToggleCollapse,
       });
     }
+
     if (typeof onToggleCollapse !== "function") {
       console.error(
         "[Sidebar] Không nhận được onToggleCollapse. DashboardShell đang dùng chưa phải bản mới.",
       );
       return;
     }
+
     onToggleCollapse();
   };
 
@@ -101,10 +110,12 @@ export default function Sidebar({
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-700 to-sky-600 text-white shadow-md shadow-blue-700/25">
               <Sparkle className="h-5 w-5" />
             </span>
+
             <span className={`leading-tight ${label}`}>
               <span className="block text-lg font-bold tracking-tight text-slate-900">
                 CleanWise
               </span>
+
               <span className="block text-xs text-slate-500">
                 Trang quản trị
               </span>
@@ -146,6 +157,9 @@ export default function Sidebar({
         >
           {NAV_ITEMS.map(({ label: text, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
+
+            const count = badgeCounts[href] ?? 0;
+
             return (
               <Link
                 key={href}
@@ -161,8 +175,21 @@ export default function Sidebar({
                 }`}
               >
                 <Icon className="h-[18px] w-[18px] shrink-0" />
+
                 <span className={label}>{text}</span>
-                {href === "/workers" && !!summary?.pending_profiles && <span aria-label={`${summary.pending_profiles} hồ sơ chờ duyệt`} className={`ml-auto rounded-full bg-red-500 px-2 text-xs leading-5 text-white ${collapsed ? "lg:absolute lg:right-0 lg:top-0 lg:px-1 lg:text-[10px]" : ""}`}>{summary.pending_profiles > 99 ? "99+" : summary.pending_profiles}</span>}
+
+                {count > 0 && (
+                  <span
+                    aria-label={`${count} mục chờ xử lý`}
+                    className={`ml-auto rounded-full bg-red-500 px-2 text-xs leading-5 text-white ${
+                      collapsed
+                        ? "lg:absolute lg:right-0 lg:top-0 lg:px-1 lg:text-[10px]"
+                        : ""
+                    }`}
+                  >
+                    {count > 99 ? "99+" : count}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -182,6 +209,7 @@ export default function Sidebar({
             className={`${itemBase} w-full bg-red-50 font-medium text-red-600 hover:bg-red-600 hover:text-white`}
           >
             <LogOut className="h-[18px] w-[18px] shrink-0" />
+
             <span className={label}>Đăng xuất</span>
           </button>
         </div>

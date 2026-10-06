@@ -28,7 +28,12 @@ export function ComplaintRow({ complaint, onSelect }: ComplaintRowProps) {
       </td>
 
       <td className="px-4 py-3.5 text-sm text-gray-600">
-        #{complaint.booking}
+        {complaint.booking_code || `#${complaint.booking}`}
+        {complaint.schedule_sequence_no ? (
+          <div className="mt-0.5 text-xs text-gray-400">
+            Buổi {complaint.schedule_sequence_no}
+          </div>
+        ) : null}
       </td>
 
       <td className="px-4 py-3.5 text-sm">

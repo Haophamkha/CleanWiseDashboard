@@ -45,9 +45,14 @@ export default function AdminNotifications() {
         try {
           const message = JSON.parse(event.data);
           if (message.type === "auth.ok") {
-            attempts = 0; refresh(true);
-            heartbeat = setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type:"ping"})); }, 25000);
+            attempts = 0;
+            refresh(true);
+            heartbeat = setInterval(() => {
+              if (socket?.readyState === WebSocket.OPEN)
+                socket.send(JSON.stringify({ type: "ping" }));
+            }, 25000);
           } else if (message.type === "profile.review.changed") refresh(true);
+          else if (message.type === "complaint.changed") refresh();
           else if (message.type === "notification.unread") refresh();
         } catch { /* Ignore malformed realtime messages; HTTP remains authoritative. */ }
       };

@@ -26,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefundBookingDialog } from "@/features/refunds/RefundBookingDialog";
 import {
   AssignWorkerDialog,
   CancelBookingDialog,
@@ -113,7 +112,6 @@ export function BookingDetailPage({ id }: { id: number }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <EditBookingDialog booking={booking} />
-          <RefundBookingDialog booking={booking} />
           <CancelBookingDialog booking={booking} />
         </div>
       </div>
