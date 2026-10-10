@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { AdminUser, BookingListParams } from "@/types/Booking";
 import { WorkerFilter } from "./WorkerFilter";
 
-type AdvancedFilters = Pick<BookingListParams, "worker_id" | "created_from" | "created_to" | "unassigned" | "ordering">;
+type AdvancedFilters = Pick<BookingListParams, "worker_id" | "created_from" | "created_to" | "unassigned" | "invitation_state" | "ordering">;
 
 function advancedValues(filters: BookingListParams): AdvancedFilters {
   return {
@@ -17,6 +17,7 @@ function advancedValues(filters: BookingListParams): AdvancedFilters {
     created_from: filters.created_from,
     created_to: filters.created_to,
     unassigned: filters.unassigned,
+    invitation_state: filters.invitation_state,
     ordering: filters.ordering ?? "-created_at",
   };
 }
@@ -34,7 +35,7 @@ export function AdvancedBookingFilters({ filters, worker, onApply }: {
   const [draft, setDraft] = useState(() => advancedValues(filters));
   const [draftWorker, setDraftWorker] = useState(worker);
   const activeCount = Number(Boolean(filters.worker_id)) + Number(Boolean(filters.created_from || filters.created_to))
-    + Number(filters.unassigned !== undefined) + Number((filters.ordering ?? "-created_at") !== "-created_at");
+    + Number(filters.unassigned !== undefined || filters.invitation_state !== undefined) + Number((filters.ordering ?? "-created_at") !== "-created_at");
 
   const handleOpen = (nextOpen: boolean) => {
     if (nextOpen) {
@@ -79,12 +80,13 @@ export function AdvancedBookingFilters({ filters, worker, onApply }: {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="min-w-0 space-y-1">
             <label htmlFor="booking-assignment-filter" className="text-xs font-medium text-slate-500">Phân công</label>
-            <Select value={draft.unassigned === undefined ? "all" : String(draft.unassigned)} onValueChange={(value) => setDraft((current) => ({ ...current, unassigned: value === "all" ? undefined : value === "true" }))}>
+            <Select value={draft.invitation_state ?? (draft.unassigned === undefined ? "all" : String(draft.unassigned))} onValueChange={(value) => setDraft((current) => ({ ...current, unassigned: value === "all" ? undefined : value !== "false", invitation_state: value === "waiting" ? "waiting" : undefined }))}>
               <SelectTrigger id="booking-assignment-filter" className={`${selectFeedback} ${draft.unassigned !== undefined ? "border-blue-300 bg-blue-50/50 text-blue-700" : ""}`}><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem className={optionFeedback} value="all">Mọi phân công</SelectItem>
-                <SelectItem className={optionFeedback} value="true">Còn buổi chưa gán</SelectItem>
-                <SelectItem className={optionFeedback} value="false">Đã gán đầy đủ</SelectItem>
+                <SelectItem className={optionFeedback} value="all">Mọi tình trạng nhân sự</SelectItem>
+                <SelectItem className={optionFeedback} value="true">Còn buổi chưa có nhân viên</SelectItem>
+                <SelectItem className={optionFeedback} value="waiting">Chờ phản hồi lời mời</SelectItem>
+                <SelectItem className={optionFeedback} value="false">Đã có đủ nhân viên</SelectItem>
               </SelectContent>
             </Select>
           </div>

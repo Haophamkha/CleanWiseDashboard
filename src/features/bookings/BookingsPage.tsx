@@ -178,7 +178,7 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
           <DropdownMenuItem asChild>
             <Link href={`/bookings/${booking.id}#schedules`}>
               <UserRoundCheck className="h-4 w-4" />
-              Gửi yêu cầu phân công
+              Phân công
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
@@ -283,6 +283,7 @@ export function BookingsPage() {
     filters.service_id ||
     filters.worker_id ||
     filters.unassigned !== undefined ||
+    filters.invitation_state !== undefined ||
     filters.created_from ||
     filters.created_to ||
     (filters.ordering ?? DEFAULT_ORDERING) !== DEFAULT_ORDERING,
@@ -326,7 +327,7 @@ export function BookingsPage() {
             Đơn dịch vụ
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Quản lý, phân công và theo dõi toàn bộ đơn dịch vụ.
+            Quản lý đơn, gửi lời mời nhận việc và theo dõi nhân viên.
           </p>
         </div>
       </div>
@@ -561,6 +562,7 @@ export function BookingsPage() {
                           buổi
                         </p>
                       )}
+                      {booking.waiting_invitations > 0 && <div className="text-xs font-medium text-amber-700">{booking.waiting_invitations} buổi chờ phản hồi</div>}
                       <p
                         className={`truncate text-xs text-slate-500 ${booking.total_schedules > 1 ? "mt-1" : ""}`}
                         title={booking.workers

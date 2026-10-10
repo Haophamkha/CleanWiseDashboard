@@ -77,6 +77,7 @@ export type Schedule = {
   note: string | null;
   completion_note: string | null;
   cancel_reason: string | null;
+  invitation: { id: number | null; source: 'ADMIN' | 'CUSTOMER'; worker: Worker; workers?: Worker[]; pending_count?: number; expires_at: string } | null;
   current_assignment: Assignment | null;
   assignment_history: Assignment[];
   images: ScheduleImage[];
@@ -121,6 +122,7 @@ export type BookingListItem = {
   total_amount: string;
   total_schedules: number;
   assigned_schedules: number;
+  waiting_invitations: number;
   completed_schedules: number;
   next_schedule_start: string | null;
   workers: Worker[];
@@ -172,6 +174,10 @@ export type CustomerSearchItem = AdminUser & {
   addresses: Address[];
 };
 export type AvailableWorker = Worker & {
+  is_customer_favorite: boolean;
+  is_customer_requested: boolean;
+  can_receive_invitation: boolean;
+  unavailable_reasons: string[];
   active_jobs_count: number;
   matched_area: boolean;
   has_time_conflict: boolean;
@@ -206,6 +212,7 @@ export type BookingListParams = {
   service_id?: number;
   worker_id?: number;
   unassigned?: boolean;
+  invitation_state?: "waiting";
   created_from?: string;
   created_to?: string;
   scheduled_from?: string;

@@ -159,7 +159,7 @@ export function WorkerRanking({ params }: { params: ReportParams }) {
             Xếp hạng nhân viên
           </CardTitle>
           <CardDescription className="mt-1">
-            Đếm đơn có buổi hoàn thành · Điểm từ đánh giá hiển thị trong kỳ
+            Yêu thích là số khách hiện đang lưu nhân viên. Khiếu nại tính theo ngày gửi trong kỳ, chỉ từ khách hàng và không gồm phản ánh đã hủy.
           </CardDescription>
         </div>
         <Select
@@ -177,6 +177,8 @@ export function WorkerRanking({ params }: { params: ReportParams }) {
             <SelectItem value="sessions">Theo số buổi</SelectItem>
             <SelectItem value="rating">Theo điểm đánh giá</SelectItem>
             <SelectItem value="commission">Theo hoa hồng</SelectItem>
+            <SelectItem value="favorites">Được yêu thích nhất</SelectItem>
+            <SelectItem value="complaints">Nhiều khiếu nại nhất</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -254,12 +256,26 @@ export function WorkerRanking({ params }: { params: ReportParams }) {
                 ),
             },
             {
+              label: "Yêu thích hiện tại",
+              className: right,
+              render: (row) => <span className="font-semibold text-rose-600">{count(row.favorite_count_current)}</span>,
+            },
+            {
+              label: "Khiếu nại trong kỳ",
+              render: (row) => <div className="min-w-44">
+                <p className="font-semibold text-slate-900">{count(row.complaint_count)} phản ánh</p>
+                <p className="text-xs text-amber-700">Đang xử lý: {count(row.complaint_pending_count)}</p>
+                <p className="text-xs text-slate-500">Đã xử lý: {count(row.complaint_resolved_count)} · Từ chối: {count(row.complaint_rejected_count)}</p>
+              </div>,
+            },
+            {
               label: "Hoa hồng CleanWise",
               className: `${right} pr-5`,
               render: (row) => currency(row.cleanwise_revenue),
             },
           ]}
         />
+        <p className="border-t border-slate-100 px-5 py-3 text-xs leading-5 text-slate-500">Số khiếu nại thể hiện lượng phản ánh, không phải số lần nhân viên được kết luận có lỗi. Đang xử lý gồm chờ xử lý và đang xem xét.</p>
       </CardContent>
     </Card>
   );
