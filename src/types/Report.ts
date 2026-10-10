@@ -3,7 +3,7 @@ export type ReportParams = {
   date?: string; start?: string; end?: string;
   group_by?: "auto" | "day" | "week" | "month";
 };
-export type WorkerSort = "orders" | "sessions" | "rating" | "commission";
+export type WorkerSort = "orders" | "sessions" | "rating" | "commission" | "favorites" | "complaints";
 export type ReportPeriod = { type: ReportParams["period"]; start: string; end: string; group_by: "day" | "week" | "month"; timezone: string };
 export type ReportSummary = {
   total_orders: number; total_order_value: string; cancelled_failed_order_value: string; valid_order_value: string;
@@ -17,6 +17,8 @@ export type ReportTimeline = { start: string; end: string; orders: number; order
 export type ReportWorker = {
   rank: number; worker_id: number; name: string; username: string; active_current: boolean; profile_status: string | null;
   completed_orders: number; completed_sessions: number; average_rating: number | null; review_count: number;
+  favorite_count_current: number; complaint_count: number; complaint_pending_count: number;
+  complaint_resolved_count: number; complaint_rejected_count: number;
   cleanwise_revenue: string; worker_income: string;
 };
 export type ReportService = {

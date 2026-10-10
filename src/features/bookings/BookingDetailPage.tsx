@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import {
   AssignWorkerDialog,
+  InvitationStatus,
   CancelBookingDialog,
   EditBookingDialog,
   RescheduleDialog,
@@ -54,11 +55,13 @@ export function BookingDetailPage({ id }: { id: number }) {
     data: booking,
     isLoading,
     isError,
-  } = useGetAdminBookingDetailQuery(id);
+  } = useGetAdminBookingDetailQuery(id, { pollingInterval: 15000, refetchOnFocus: true });
   const { data: serviceDetail } = useGetServiceDetailQuery(booking?.service.id ?? 0, { skip: !booking?.service.id });
   const serviceFields = (serviceDetail?.data?.form_schema as ServiceFormSchema | undefined)?.fields ?? [];
-  const { data: timeline } = useGetBookingTimelineQuery(id);
+  const { data: timeline } = useGetBookingTimelineQuery(id, { pollingInterval: 15000 });
   const [selected, setSelected] = useState<number[]>([]);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 15000); return () => clearInterval(timer); }, []);
   if (isLoading)
     return (
       <div className="space-y-4">
@@ -80,7 +83,7 @@ export function BookingDetailPage({ id }: { id: number }) {
         </CardContent>
       </Card>
     );
-  const selectable = booking.schedules.filter((s) => s.status === "PENDING");
+  const selectable = booking.schedules.filter((s) => s.status === "PENDING" && !s.current_assignment && !s.invitation && new Date(s.scheduled_start).getTime() > now);
   const firstSelected = booking.schedules.find((s) => s.id === selected[0]);
   const refunded = Number(booking.refunded_amount ?? 0);
 
@@ -224,7 +227,7 @@ export function BookingDetailPage({ id }: { id: number }) {
               Các buổi làm
             </CardTitle>
             <p className="mt-1 text-sm text-slate-500">
-              Chọn nhiều buổi chờ xử lý để gán cùng một nhân viên.
+              Chọn các buổi chưa có nhân viên để gửi lời mời nhận việc.
             </p>
           </div>
           {firstSelected && selected.length > 1 && (
@@ -232,6 +235,8 @@ export function BookingDetailPage({ id }: { id: number }) {
               bookingId={booking.id}
               schedule={firstSelected}
               selectedScheduleIds={selected}
+              selectedSchedules={booking.schedules.filter((s) => selected.includes(s.id))}
+              contextLabel={`${booking.service.name} · ${booking.address.address_line}`}
             />
           )}
         </CardHeader>
@@ -261,7 +266,7 @@ export function BookingDetailPage({ id }: { id: number }) {
               {booking.schedules.map((schedule) => (
                 <TableRow key={schedule.id}>
                   <TableCell>
-                    {schedule.status === "PENDING" && (
+                    {selectable.some((s) => s.id === schedule.id) && (
                       <Checkbox
                         checked={selected.includes(schedule.id)}
                         onCheckedChange={(checked) =>
@@ -299,7 +304,7 @@ export function BookingDetailPage({ id }: { id: number }) {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-slate-400">Chưa phân công</span>
+                      <div><span className="text-slate-400">Chưa có nhân viên</span><InvitationStatus bookingId={booking.id} schedule={schedule} /></div>
                     )}
                   </TableCell>
                   <TableCell>
@@ -315,6 +320,7 @@ export function BookingDetailPage({ id }: { id: number }) {
                           <AssignWorkerDialog
                             bookingId={booking.id}
                             schedule={schedule}
+                            contextLabel={`${booking.service.name} · ${booking.address.address_line}`}
                           />
                           <RescheduleDialog
                             bookingId={booking.id}

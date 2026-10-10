@@ -5,7 +5,7 @@ const unwrap = <T,>(response: unknown): T => {
   const first = (response as { data?: unknown })?.data ?? response;
   return ((first as { data?: T })?.data ?? first) as T;
 };
-const tags = [{ type: "Bookings", id: "LIST" }, "Workers", { type: "Workers", id: "AVAILABLE" }, { type: "Reviews", id: "LIST" }, { type: "Services", id: "LIST" }] as const;
+const tags = [{ type: "Bookings", id: "LIST" }, "Workers", { type: "Workers", id: "AVAILABLE" }, { type: "Reviews", id: "LIST" }, { type: "Services", id: "LIST" }, { type: "Complaints", id: "LIST" }] as const;
 type PageParams = ReportParams & { page?: number; page_size?: number; sort?: WorkerSort };
 export const reportApi = baseApi.injectEndpoints({
   endpoints: builder => ({
