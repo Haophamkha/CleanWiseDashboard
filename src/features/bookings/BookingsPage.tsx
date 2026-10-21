@@ -251,6 +251,25 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
   );
 }
 
+function relativeTime(iso: string | null | undefined) {
+  if (!iso) return null;
+  const diffMin = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  const abs = Math.abs(diffMin);
+  const text =
+    abs < 60
+      ? `${abs} phút`
+      : abs < 1440
+        ? `${Math.floor(abs / 60)} giờ`
+        : `${Math.floor(abs / 1440)} ngày`;
+  return diffMin >= 0 ? `Còn ${text}` : `Quá giờ ${text}`;
+}
+
+const endedLabels: Record<string, string> = {
+  COMPLETED: "Đã hoàn thành",
+  CANCELLED: "Đã hủy",
+  FAILED: "Thất bại",
+};
+
 export function BookingsPage() {
   const [filters, setFilters] = useState<BookingListParams>(defaultFilters);
   const [search, setSearch] = useState("");
@@ -470,7 +489,7 @@ export function BookingsPage() {
                     onSort={sortBy}
                   />
                   <SortHead
-                    label="Lịch tiếp theo"
+                    label="Giờ bắt đầu"
                     field="next_schedule_start"
                     ordering={filters.ordering}
                     onSort={sortBy}
@@ -533,12 +552,35 @@ export function BookingsPage() {
                       </p>
                     </TableCell>
                     <TableCell className="align-middle">
-                      <p className="whitespace-nowrap font-medium text-slate-700">
-                        {compactDateTime(booking.next_schedule_start)}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Buổi gần nhất
-                      </p>
+                      {endedLabels[booking.status] ? (
+                        <>
+                          <p className="font-medium text-slate-400">—</p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {endedLabels[booking.status]}
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const rel = relativeTime(booking.next_schedule_start);
+                          const overdue = rel?.startsWith("Quá");
+                          return (
+                            <>
+                              <p className="whitespace-nowrap font-medium text-slate-700">
+                                {compactDateTime(booking.next_schedule_start)}
+                              </p>
+                              <p
+                                className={`mt-1 text-xs ${
+                                  overdue
+                                    ? "font-medium text-red-600"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {rel ?? "Chưa có lịch"}
+                              </p>
+                            </>
+                          );
+                        })()
+                      )}
                     </TableCell>
                     <TableCell className="align-middle">
                       <div className="flex flex-col items-start gap-1.5">
@@ -562,7 +604,11 @@ export function BookingsPage() {
                           buổi
                         </p>
                       )}
-                      {booking.waiting_invitations > 0 && <div className="text-xs font-medium text-amber-700">{booking.waiting_invitations} buổi chờ phản hồi</div>}
+                      {booking.waiting_invitations > 0 && (
+                        <div className="text-xs font-medium text-amber-700">
+                          {booking.waiting_invitations} buổi chờ phản hồi
+                        </div>
+                      )}
                       <p
                         className={`truncate text-xs text-slate-500 ${booking.total_schedules > 1 ? "mt-1" : ""}`}
                         title={booking.workers
