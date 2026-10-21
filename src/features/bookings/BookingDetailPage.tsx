@@ -55,13 +55,26 @@ export function BookingDetailPage({ id }: { id: number }) {
     data: booking,
     isLoading,
     isError,
-  } = useGetAdminBookingDetailQuery(id, { pollingInterval: 15000, refetchOnFocus: true });
-  const { data: serviceDetail } = useGetServiceDetailQuery(booking?.service.id ?? 0, { skip: !booking?.service.id });
-  const serviceFields = (serviceDetail?.data?.form_schema as ServiceFormSchema | undefined)?.fields ?? [];
-  const { data: timeline } = useGetBookingTimelineQuery(id, { pollingInterval: 15000 });
+  } = useGetAdminBookingDetailQuery(id, {
+    pollingInterval: 15000,
+    refetchOnFocus: true,
+  });
+  const { data: serviceDetail } = useGetServiceDetailQuery(
+    booking?.service.id ?? 0,
+    { skip: !booking?.service.id },
+  );
+  const serviceFields =
+    (serviceDetail?.data?.form_schema as ServiceFormSchema | undefined)
+      ?.fields ?? [];
+  const { data: timeline } = useGetBookingTimelineQuery(id, {
+    pollingInterval: 15000,
+  });
   const [selected, setSelected] = useState<number[]>([]);
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 15000); return () => clearInterval(timer); }, []);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, []);
   if (isLoading)
     return (
       <div className="space-y-4">
@@ -83,7 +96,13 @@ export function BookingDetailPage({ id }: { id: number }) {
         </CardContent>
       </Card>
     );
-  const selectable = booking.schedules.filter((s) => s.status === "PENDING" && !s.current_assignment && !s.invitation && new Date(s.scheduled_start).getTime() > now);
+  const selectable = booking.schedules.filter(
+    (s) =>
+      s.status === "PENDING" &&
+      !s.current_assignment &&
+      !s.invitation &&
+      new Date(s.scheduled_start).getTime() > now,
+  );
   const firstSelected = booking.schedules.find((s) => s.id === selected[0]);
   const refunded = Number(booking.refunded_amount ?? 0);
 
@@ -118,6 +137,11 @@ export function BookingDetailPage({ id }: { id: number }) {
           <CancelBookingDialog booking={booking} />
         </div>
       </div>
+      {booking.cancel_reason && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <b>Lý do hủy đơn:</b> {booking.cancel_reason}
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
@@ -207,7 +231,12 @@ export function BookingDetailPage({ id }: { id: number }) {
                 <Info
                   key={key}
                   label={serviceFieldLabel(key, serviceFields)}
-                  value={serviceFieldValue(key, value, serviceFields, booking.service_data)}
+                  value={serviceFieldValue(
+                    key,
+                    value,
+                    serviceFields,
+                    booking.service_data,
+                  )}
                 />
               ))}
               {!Object.keys(booking.service_data).length && (
@@ -235,7 +264,9 @@ export function BookingDetailPage({ id }: { id: number }) {
               bookingId={booking.id}
               schedule={firstSelected}
               selectedScheduleIds={selected}
-              selectedSchedules={booking.schedules.filter((s) => selected.includes(s.id))}
+              selectedSchedules={booking.schedules.filter((s) =>
+                selected.includes(s.id),
+              )}
               contextLabel={`${booking.service.name} · ${booking.address.address_line}`}
             />
           )}
@@ -304,7 +335,30 @@ export function BookingDetailPage({ id }: { id: number }) {
                         </div>
                       </div>
                     ) : (
-                      <div><span className="text-slate-400">Chưa có nhân viên</span><InvitationStatus bookingId={booking.id} schedule={schedule} /></div>
+                      <div>
+                        <span className="text-slate-400">
+                          Chưa có nhân viên
+                        </span>
+                        {(() => {
+                          const dropped = schedule.assignment_history?.find(
+                            (a) =>
+                              a.status === "CANCELLED" &&
+                              a.response_note &&
+                              !a.assigned_by,
+                          );
+
+                          return dropped ? (
+                            <p className="mt-1 max-w-48 text-xs text-slate-500">
+                              {dropped.worker.full_name}:{" "}
+                              {dropped.response_note}
+                            </p>
+                          ) : null;
+                        })()}
+                        <InvitationStatus
+                          bookingId={booking.id}
+                          schedule={schedule}
+                        />
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>
@@ -312,6 +366,12 @@ export function BookingDetailPage({ id }: { id: number }) {
                       status={schedule.status}
                       label={schedule.status_label}
                     />
+                    {schedule.cancel_reason &&
+                      ["CANCELLED", "MISSED"].includes(schedule.status) && (
+                        <p className="mt-1 max-w-48 text-xs text-red-600">
+                          {schedule.cancel_reason}
+                        </p>
+                      )}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">

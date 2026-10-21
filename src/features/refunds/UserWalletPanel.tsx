@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
@@ -110,6 +111,7 @@ export function UserWalletPanel({ userId }: { userId: number }) {
                     : t.direction === "DEBIT"
                       ? "text-rose-600"
                       : "text-slate-700";
+
                 return (
                   <TableRow
                     key={t.id}
@@ -118,8 +120,16 @@ export function UserWalletPanel({ userId }: { userId: number }) {
                     <TableCell className="whitespace-nowrap px-3 py-2.5 text-slate-600">
                       {dateTime(t.created_at)}
                     </TableCell>
+
                     <TableCell className="max-w-[220px] px-3 py-2.5">
                       <p className="text-slate-900">{t.type_display}</p>
+
+                      {t.code && (
+                        <p className="font-mono text-xs text-slate-400">
+                          {t.code}
+                        </p>
+                      )}
+
                       {t.note && (
                         <p
                           className="line-clamp-2 text-xs text-slate-500"
@@ -129,15 +139,18 @@ export function UserWalletPanel({ userId }: { userId: number }) {
                         </p>
                       )}
                     </TableCell>
+
                     <TableCell
                       className={`whitespace-nowrap px-3 py-2.5 text-right font-medium ${tone}`}
                     >
                       {sign}
                       {vnd(t.amount)}
                     </TableCell>
+
                     <TableCell className="whitespace-nowrap px-3 py-2.5 text-right text-slate-600">
                       {vnd(t.balance_after)}
                     </TableCell>
+
                     <TableCell className="px-3 py-2.5">
                       <StatusPill
                         tone={
@@ -151,6 +164,7 @@ export function UserWalletPanel({ userId }: { userId: number }) {
                         {t.status_display}
                       </StatusPill>
                     </TableCell>
+
                     <TableCell className="px-3 py-2.5">
                       {t.booking_id ? (
                         <Link
@@ -168,11 +182,13 @@ export function UserWalletPanel({ userId }: { userId: number }) {
               })}
             </TableBody>
           </Table>
+
           {isFetching && !data && (
             <p className="py-8 text-center text-sm text-slate-500">
               Đang tải giao dịch...
             </p>
           )}
+
           {data && !data.results.length && (
             <p className="py-8 text-center text-sm text-slate-500">
               Chưa có giao dịch nào.
@@ -186,6 +202,7 @@ export function UserWalletPanel({ userId }: { userId: number }) {
           <span>
             {data.count} giao dịch • Trang {data.page}/{data.total_pages}
           </span>
+
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -196,6 +213,7 @@ export function UserWalletPanel({ userId }: { userId: number }) {
               <ChevronLeft className="h-4 w-4" />
               Trước
             </Button>
+
             <Button
               variant="outline"
               size="sm"

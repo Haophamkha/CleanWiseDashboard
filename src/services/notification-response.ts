@@ -4,6 +4,7 @@ export type AdminNotification = {
   message: string;
   related_worker: number | null;
   related_booking: number | null;
+  target?: string;
   is_read: boolean;
   created_at: string;
 };

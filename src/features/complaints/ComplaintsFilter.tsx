@@ -1,4 +1,3 @@
-// ComplaintsFilter.tsx
 import type {
   ComplaintReporterRole,
   ComplaintStage,
@@ -29,9 +28,11 @@ const REPORTER_OPTIONS: { value: ComplaintReporterRole | ""; label: string }[] =
   ];
 
 interface ComplaintsFilterProps {
+  search: string;
   status: ComplaintStatus | "";
   stage: ComplaintStage | "";
   reporterRole: ComplaintReporterRole | "";
+  onSearchChange: (value: string) => void;
   onStatusChange: (value: ComplaintStatus | "") => void;
   onStageChange: (value: ComplaintStage | "") => void;
   onReporterRoleChange: (value: ComplaintReporterRole | "") => void;
@@ -75,16 +76,63 @@ function FilterSelect<T extends string>({
   );
 }
 
+function SearchBox({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <svg
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+          clipRule="evenodd"
+        />
+      </svg>
+
+      <input
+        type="text"
+        aria-label="Tìm khiếu nại"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Mã KN, mã đơn, người gửi..."
+        className="w-64 rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      />
+
+      {value && (
+        <button
+          type="button"
+          aria-label="Xóa tìm kiếm"
+          onClick={() => onChange("")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ComplaintsFilter({
+  search,
   status,
   stage,
   reporterRole,
+  onSearchChange,
   onStatusChange,
   onStageChange,
   onReporterRoleChange,
 }: ComplaintsFilterProps) {
   return (
     <div className="flex flex-wrap gap-2">
+      <SearchBox value={search} onChange={onSearchChange} />
       <FilterSelect
         value={reporterRole}
         options={REPORTER_OPTIONS}
