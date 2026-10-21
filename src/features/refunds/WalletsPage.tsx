@@ -1,4 +1,5 @@
 "use client";
+
 import { StatusPill } from "@/components/ui/status-pill";
 import { Card } from "@/components/ui/card";
 import {
@@ -70,6 +71,7 @@ export function WalletsPage() {
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
   };
+
   const { data, isFetching, isError, refetch } = useGetWalletTransactionsQuery({
     ...filters,
     page,
@@ -80,6 +82,7 @@ export function WalletsPage() {
     setter(value === "ALL" ? "" : value);
     setPage(1);
   };
+
   const hasFilters = Boolean(
     search ||
     type ||
@@ -90,6 +93,7 @@ export function WalletsPage() {
     dateFrom ||
     dateTo,
   );
+
   const clearFilters = () => {
     setSearch("");
     setType("");
@@ -101,10 +105,12 @@ export function WalletsPage() {
     setDateTo("");
     setPage(1);
   };
+
   const dateInvalid = Boolean(dateFrom && dateTo && dateFrom > dateTo);
 
   const exportXlsx = async () => {
     if (dateInvalid || exporting) return;
+
     setExporting(true);
     try {
       const blob = await requestBlob(EXPORT_URL, filters);
@@ -136,6 +142,7 @@ export function WalletsPage() {
             lý trong mục Khiếu nại.
           </p>
         </div>
+
         <Button
           variant="outline"
           className="self-start"
@@ -150,6 +157,7 @@ export function WalletsPage() {
           Xuất Excel
         </Button>
       </div>
+
       <Card className="space-y-4 p-4">
         <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
           <Tabs
@@ -164,6 +172,7 @@ export function WalletsPage() {
               <TabsTrigger value="FAILED">Thất bại</TabsTrigger>
             </TabsList>
           </Tabs>
+
           <div className="sm:hidden">
             <WalletFilter
               label="Trạng thái giao dịch"
@@ -177,6 +186,7 @@ export function WalletsPage() {
               ]}
             />
           </div>
+
           <div className="flex w-full items-center gap-2 xl:w-auto">
             <div className="relative flex-1 xl:w-80">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -188,9 +198,10 @@ export function WalletsPage() {
                   setSearch(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Người dùng, mã đơn, ghi chú..."
+                placeholder="Người dùng, mã GD, mã đơn, ghi chú..."
               />
             </div>
+
             <Button
               variant="outline"
               size="icon"
@@ -204,6 +215,7 @@ export function WalletsPage() {
             </Button>
           </div>
         </div>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <WalletFilter
             label="Loại giao dịch"
@@ -212,6 +224,7 @@ export function WalletsPage() {
             allLabel="Mọi loại giao dịch"
             options={TYPE_OPTIONS}
           />
+
           <WalletFilter
             label="Nguồn giao dịch"
             value={source}
@@ -222,6 +235,7 @@ export function WalletsPage() {
               ["admin", "Quản trị viên"],
             ]}
           />
+
           <WalletFilter
             label="Chủ ví"
             value={role}
@@ -232,6 +246,7 @@ export function WalletsPage() {
               ["WORKER", "Nhân viên"],
             ]}
           />
+
           <WalletFilter
             label="Chiều giao dịch"
             value={direction}
@@ -243,6 +258,7 @@ export function WalletsPage() {
             ]}
           />
         </div>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="space-y-1.5 text-xs font-medium text-slate-500">
             Từ ngày
@@ -256,6 +272,7 @@ export function WalletsPage() {
               }}
             />
           </label>
+
           <label className="space-y-1.5 text-xs font-medium text-slate-500">
             Đến ngày
             <Input
@@ -268,12 +285,14 @@ export function WalletsPage() {
               }}
             />
           </label>
+
           {dateInvalid && (
             <p className="self-end text-xs text-rose-600">
               &quot;Từ ngày&quot; phải trước hoặc bằng &quot;Đến ngày&quot;.
             </p>
           )}
         </div>
+
         {hasFilters && (
           <Button variant="ghost" onClick={clearFilters}>
             <X className="h-4 w-4" />
@@ -304,6 +323,7 @@ export function WalletsPage() {
               </TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody className="divide-y divide-slate-100">
             {data?.results.map((t) => {
               const sign =
@@ -312,25 +332,36 @@ export function WalletsPage() {
                   : t.direction === "DEBIT"
                     ? "−"
                     : "";
+
               const tone =
                 t.direction === "CREDIT"
                   ? "text-emerald-600"
                   : t.direction === "DEBIT"
                     ? "text-rose-600"
                     : "text-slate-700";
+
               return (
                 <TableRow key={t.id} className="align-top hover:bg-slate-50/60">
                   <TableCell className="whitespace-nowrap px-4 py-3 text-slate-600">
                     {dateTime(t.created_at)}
                   </TableCell>
+
                   <TableCell className="px-4 py-3">
                     <p className="font-medium text-slate-900">{t.full_name}</p>
                     <p className="text-xs text-slate-500">
                       {ROLE_LABEL[t.role] ?? t.role} • @{t.username}
                     </p>
                   </TableCell>
+
                   <TableCell className="max-w-xs px-4 py-3">
                     <p className="text-slate-900">{t.type_display}</p>
+
+                    {t.code && (
+                      <p className="font-mono text-xs text-slate-400">
+                        {t.code}
+                      </p>
+                    )}
+
                     {t.note && (
                       <p
                         className="line-clamp-2 text-xs text-slate-500"
@@ -340,15 +371,18 @@ export function WalletsPage() {
                       </p>
                     )}
                   </TableCell>
+
                   <TableCell
                     className={`whitespace-nowrap px-4 py-3 text-right font-medium ${tone}`}
                   >
                     {sign}
                     {vnd(t.amount)}
                   </TableCell>
+
                   <TableCell className="whitespace-nowrap px-4 py-3 text-right text-slate-600">
                     {vnd(t.balance_after)}
                   </TableCell>
+
                   <TableCell className="px-4 py-3">
                     <StatusPill
                       tone={
@@ -362,6 +396,7 @@ export function WalletsPage() {
                       {t.status_display}
                     </StatusPill>
                   </TableCell>
+
                   <TableCell className="px-4 py-3">
                     {t.booking_id ? (
                       <Link
@@ -374,6 +409,7 @@ export function WalletsPage() {
                       <span className="text-slate-400">—</span>
                     )}
                   </TableCell>
+
                   <TableCell className="px-4 py-3 text-slate-600">
                     {t.created_by_name ?? "Hệ thống"}
                   </TableCell>
@@ -388,6 +424,7 @@ export function WalletsPage() {
             Đang tải giao dịch...
           </p>
         )}
+
         {isError && (
           <p className="py-10 text-center text-sm text-rose-600">
             Không tải được giao dịch.
@@ -401,6 +438,7 @@ export function WalletsPage() {
             </Button>
           </p>
         )}
+
         {data && !data.results.length && (
           <p className="py-10 text-center text-sm text-slate-500">
             Không có giao dịch nào khớp bộ lọc.
@@ -413,6 +451,7 @@ export function WalletsPage() {
           <span>
             {data.count} giao dịch • Trang {data.page}/{data.total_pages}
           </span>
+
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -423,6 +462,7 @@ export function WalletsPage() {
               <ChevronLeft className="h-4 w-4" />
               Trước
             </Button>
+
             <Button
               variant="outline"
               size="sm"

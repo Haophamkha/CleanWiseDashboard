@@ -190,10 +190,18 @@ export function InvitationStatus({ bookingId, schedule }: { bookingId: number; s
       toast.success("Đã thu hồi lời mời."); setOpen(false);
     } catch (error) { toast.error(apiError(error)); }
   };
-  if (!invitation) {
-    const latest = schedule.assignment_history.find((a) => a.expired_at && a.assigned_by);
-    return latest && !schedule.current_assignment ? <p className="mt-1 text-xs text-slate-500">Lời mời gần nhất: {latest.status === "PENDING" ? "Đã hết hạn" : latest.status_label}</p> : null;
-  }
+    if (!invitation) {
+      const latest = schedule.assignment_history.find(
+        (a) => a.expired_at && a.assigned_by,
+      );
+      return latest && !schedule.current_assignment ? (
+        <p className="mt-1 text-xs text-slate-500">
+          Lời mời gần nhất:{" "}
+          {latest.status === "PENDING" ? "Đã hết hạn" : latest.status_label}
+          {latest.response_note ? ` · ${latest.response_note}` : ""}
+        </p>
+      ) : null;
+    }
   return <div className="space-y-1">
     <p className="text-sm font-medium text-amber-700">{minutes > 0 ? `Chờ ${invitation.pending_count && invitation.pending_count > 1 ? `${invitation.pending_count} nhân viên` : invitation.worker.full_name} phản hồi · còn ${minutes} phút` : "Lời mời đã hết hạn"}</p>
     <p className="text-xs text-slate-500">{invitation.source === "CUSTOMER" ? "Khách hàng mời" : "Admin mời"} · Hạn {dateTime(invitation.expires_at)}</p>

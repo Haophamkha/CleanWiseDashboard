@@ -21,6 +21,7 @@ export interface ComplaintAttachment {
 
 export interface Complaint {
   id: number;
+  code?: string | null;
   booking: number;
   booking_code: string;
   schedule: number | null;
@@ -75,6 +76,8 @@ export interface GetComplaintsParams {
   issue_type?: number;
   reporter_role?: ComplaintReporterRole;
   worker?: number;
+  /** Tìm theo mã khiếu nại, mã đơn hoặc tên người gửi */
+  search?: string;
 }
 
 export interface ResolveComplaintRequest {

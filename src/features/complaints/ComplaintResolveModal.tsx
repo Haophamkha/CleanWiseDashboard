@@ -224,7 +224,9 @@ export function ComplaintResolveModal({
               <div>
                 <p className="text-sm text-gray-500">Mã khiếu nại</p>
 
-                <p className="font-semibold">#{detail.id}</p>
+                <p className="font-mono font-semibold">
+                  {detail.code ?? `#${detail.id}`}
+                </p>
               </div>
 
               <ComplaintStatusBadge status={detail.status} />

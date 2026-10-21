@@ -12,6 +12,7 @@ export type WalletDirection = "CREDIT" | "DEBIT" | "";
 /** Giao dịch ví (dạng dùng chung với app khách/nhân viên). */
 export type WalletTransaction = {
   id: number;
+  code: string | null;
   type: WalletTransactionType;
   type_display: string;
   amount: string;

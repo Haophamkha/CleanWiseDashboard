@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGetComplaintsQuery } from "@/services/complaintApi";
+import { useDebounced } from "@/features/refunds/refund-utils";
 import { ComplaintsFilter } from "./ComplaintsFilter";
 import { ComplaintsTable } from "./ComplaintsTable";
 import { ComplaintResolveModal } from "./ComplaintResolveModal";
@@ -12,6 +13,7 @@ import type {
 } from "@/types/Complaint";
 
 export function ComplaintsPage() {
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | "">("");
   const [stageFilter, setStageFilter] = useState<ComplaintStage | "">("");
   const [reporterFilter, setReporterFilter] = useState<
@@ -19,11 +21,14 @@ export function ComplaintsPage() {
   >("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  const debouncedSearch = useDebounced(search).trim();
+
   const {
     data: complaints,
     isLoading,
     isError,
   } = useGetComplaintsQuery({
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(stageFilter ? { stage: stageFilter } : {}),
     ...(reporterFilter ? { reporter_role: reporterFilter } : {}),
@@ -51,9 +56,11 @@ export function ComplaintsPage() {
         </div>
 
         <ComplaintsFilter
+          search={search}
           status={statusFilter}
           stage={stageFilter}
           reporterRole={reporterFilter}
+          onSearchChange={setSearch}
           onStatusChange={setStatusFilter}
           onStageChange={setStageFilter}
           onReporterRoleChange={setReporterFilter}

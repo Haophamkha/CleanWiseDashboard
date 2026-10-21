@@ -23,8 +23,8 @@ export function ComplaintRow({ complaint, onSelect }: ComplaintRowProps) {
       onClick={() => onSelect(complaint.id)}
       className="cursor-pointer border-b border-gray-100 transition hover:bg-blue-50/40"
     >
-      <td className="px-4 py-3.5 text-sm font-medium text-gray-400">
-        #{complaint.id}
+      <td className="whitespace-nowrap px-4 py-3.5 font-mono text-sm font-medium text-gray-700">
+        {complaint.code ?? `#${complaint.id}`}
       </td>
 
       <td className="px-4 py-3.5 text-sm text-gray-600">
