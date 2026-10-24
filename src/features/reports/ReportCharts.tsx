@@ -24,7 +24,7 @@ export default function ReportCharts({ data, filters, fetching, errorContent }: 
       <CardContent className="px-4 pb-4" aria-busy={fetching}>
         {filters}
         <div className="my-3 flex flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-2 text-xs text-slate-500" aria-live="polite">
-          <span>Kỳ báo cáo áp dụng cho toàn trang · Giờ Việt Nam</span>
+          <span>Kỳ báo cáo doanh thu, đơn dịch vụ và hiệu suất · Giờ Việt Nam</span>
           <span>{fetching ? "Đang cập nhật…" : data ? `${displayDate(data.period.start)} – ${displayDate(shiftDay(data.period.end, -1))} · Theo ${data.period.group_by === "day" ? "ngày" : data.period.group_by === "week" ? "tuần" : "tháng"}` : ""}</span>
         </div>
         {errorContent ?? (!data ? <Skeleton className="h-[180px] w-full sm:h-[200px]" /> : hasTimeline ? <>

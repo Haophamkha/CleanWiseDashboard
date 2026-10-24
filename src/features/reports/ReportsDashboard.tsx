@@ -24,6 +24,7 @@ import {
 } from "@/services/reportApi";
 import type { ReportParams } from "@/types/Report";
 import ReportCharts from "./ReportCharts";
+import MonthlyFavorites from "./MonthlyFavorites";
 import ReportFilters from "./ReportFilters";
 import { ReportDetails, WorkerRanking } from "./ReportTables";
 import { count, currency, shiftDay } from "./report-utils";
@@ -271,6 +272,8 @@ export default function ReportsDashboard() {
           ) : undefined
         }
       />
+
+      <MonthlyFavorites refreshKey={refreshKey} />
 
       {data && summary && !isError && (
         <>
