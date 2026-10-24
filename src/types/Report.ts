@@ -39,3 +39,17 @@ export type ReportRevenue = {
 };
 export type ReportPage<T> = { period: ReportPeriod; results: T[]; count: number; page: number; page_size: number; total_pages: number; has_next: boolean; has_previous: boolean };
 export type ReportOverview = { period: ReportPeriod; summary: ReportSummary; timeline: ReportTimeline[]; services: ReportService[]; top_workers: ReportWorker[]; recent_bookings: ReportBooking[] };
+
+export type MonthlyFavoriteReport = {
+  year: number;
+  month: number;
+  timezone: string;
+  basis: "unique_customer_worker_additions_per_month";
+  period: { start: string; end: string; end_exclusive: boolean };
+  summary: {
+    favorites: number; customers: number; workers: number; legacy_entries: number;
+    previous_month_favorites: number; change: number; change_percent: number | null;
+  };
+  timeline: { month: string; favorites: number; customers: number; workers: number }[];
+  top_workers: { rank: number; worker_id: number; name: string; username: string; favorite_count: number; active_current: boolean }[];
+};

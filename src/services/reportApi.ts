@@ -1,4 +1,5 @@
 import { baseApi, requestBlob } from "@/store/baseApi";
+import type { MonthlyFavoriteReport } from "@/types/Report";
 import type { ReportBooking, ReportOverview, ReportPage, ReportParams, ReportRevenue, ReportService, ReportWorker, WorkerSort } from "@/types/Report";
 
 const unwrap = <T,>(response: unknown): T => {
@@ -9,6 +10,11 @@ const tags = [{ type: "Bookings", id: "LIST" }, "Workers", { type: "Workers", id
 type PageParams = ReportParams & { page?: number; page_size?: number; sort?: WorkerSort };
 export const reportApi = baseApi.injectEndpoints({
   endpoints: builder => ({
+    getMonthlyFavorites: builder.query<MonthlyFavoriteReport, { year: number; month: number }>({
+      query: params => ({ url: "/api/admin/reports/favorite-workers/", method: "GET", params }),
+      transformResponse: unwrap,
+      providesTags: [...tags],
+    }),
     getReportOverview: builder.query<ReportOverview, ReportParams>({ query: params => ({url: "/api/admin/reports/", method: "GET", params}), transformResponse: unwrap, providesTags: [...tags] }),
     getReportWorkers: builder.query<ReportPage<ReportWorker>, PageParams>({ query: params => ({url: "/api/admin/reports/workers/", method: "GET", params}), transformResponse: unwrap, providesTags: [...tags] }),
     getReportServices: builder.query<ReportPage<ReportService>, PageParams>({ query: params => ({url: "/api/admin/reports/services/", method: "GET", params}), transformResponse: unwrap, providesTags: [...tags] }),
@@ -16,7 +22,7 @@ export const reportApi = baseApi.injectEndpoints({
     getReportRevenue: builder.query<ReportPage<ReportRevenue>, PageParams>({ query: params => ({url: "/api/admin/reports/revenue/", method: "GET", params}), transformResponse: unwrap, providesTags: [...tags] }),
   }),
 });
-export const { useGetReportOverviewQuery, useGetReportWorkersQuery, useGetReportServicesQuery, useGetReportBookingsQuery, useGetReportRevenueQuery } = reportApi;
+export const { useGetMonthlyFavoritesQuery, useGetReportOverviewQuery, useGetReportWorkersQuery, useGetReportServicesQuery, useGetReportBookingsQuery, useGetReportRevenueQuery } = reportApi;
 
 export async function downloadReport(params: ReportParams, filename: string) {
   const blob = await requestBlob("/api/admin/reports/export/", params);
