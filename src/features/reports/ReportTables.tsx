@@ -147,7 +147,7 @@ export function WorkerRanking({ params }: { params: ReportParams }) {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<WorkerSort>("orders");
   const query = useGetReportWorkersQuery(
-    { ...params, page, page_size: 10, sort },
+    { ...params, page, page_size: 5, sort },
     { refetchOnMountOrArgChange: true },
   );
   return (
@@ -281,10 +281,10 @@ export function WorkerRanking({ params }: { params: ReportParams }) {
   );
 }
 
-function BookingTable({ params }: { params: ReportParams }) {
+export function BookingTable({ params }: { params: ReportParams }) {
   const [page, setPage] = useState(1);
   const query = useGetReportBookingsQuery(
-    { ...params, page, page_size: 10 },
+    { ...params, page, page_size: 5 },
     { refetchOnMountOrArgChange: true },
   );
   return (
@@ -349,10 +349,10 @@ function BookingTable({ params }: { params: ReportParams }) {
   );
 }
 
-function ServiceTable({ params }: { params: ReportParams }) {
+export function ServiceTable({ params }: { params: ReportParams }) {
   const [page, setPage] = useState(1);
   const query = useGetReportServicesQuery(
-    { ...params, page, page_size: 10 },
+    { ...params, page, page_size: 5 },
     { refetchOnMountOrArgChange: true },
   );
   return (
@@ -413,10 +413,10 @@ function ServiceTable({ params }: { params: ReportParams }) {
   );
 }
 
-function RevenueTable({ params }: { params: ReportParams }) {
+export function RevenueTable({ params }: { params: ReportParams }) {
   const [page, setPage] = useState(1);
   const query = useGetReportRevenueQuery(
-    { ...params, page, page_size: 10 },
+    { ...params, page, page_size: 5 },
     { refetchOnMountOrArgChange: true },
   );
   return (

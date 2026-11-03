@@ -39,6 +39,10 @@ export type ReportRevenue = {
 };
 export type ReportPage<T> = { period: ReportPeriod; results: T[]; count: number; page: number; page_size: number; total_pages: number; has_next: boolean; has_previous: boolean };
 export type ReportOverview = { period: ReportPeriod; summary: ReportSummary; timeline: ReportTimeline[]; services: ReportService[]; top_workers: ReportWorker[]; recent_bookings: ReportBooking[] };
+export type VipCustomer = { customer_id: number; name: string; username: string; booking_count: number; completed_value: string; last_booking_at: string; rewarded: boolean; reward_code: string | null };
+export type MonthlyVipReport = { month: string; summary: { customers: number; rewarded: number; unrewarded: number }; results: VipCustomer[]; count: number; page: number; page_size: number; total_pages: number; has_previous: boolean; has_next: boolean };
+export type VipParams = { year: number; month: number; min_bookings: number; page?: number; page_size?: number };
+export type AuditRow = { schedule_id: number; booking_id: number; booking_code: string; sequence_no: number; scheduled_start: string; actual_end: string | null; issue: string };
 
 export type MonthlyFavoriteReport = {
   year: number;
