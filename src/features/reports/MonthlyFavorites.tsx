@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { AlertCircle, Heart, RefreshCw, Trophy, UsersRound } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiError } from "@/features/bookings/booking-ui";
 import { useGetMonthlyFavoritesQuery } from "@/services/reportApi";
 import { count } from "./report-utils";
 
-export default function MonthlyFavorites({ refreshKey }: { refreshKey: number }) {
-  const [selected, setSelected] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).slice(0, 7));
+export default function MonthlyFavorites({ refreshKey, selected }: { refreshKey: number; selected: string }) {
   const [year, month] = selected.split("-").map(Number);
   const { currentData: data, isFetching, isError, error, refetch } = useGetMonthlyFavoritesQuery(
     { year, month }, { refetchOnMountOrArgChange: true, refetchOnFocus: true, refetchOnReconnect: true },
@@ -37,14 +35,7 @@ export default function MonthlyFavorites({ refreshKey }: { refreshKey: number })
           <CardDescription className="mt-1.5">Mỗi khách được tính một lần cho mỗi nhân viên khi thêm yêu thích trong tháng, kể cả sau đó bỏ yêu thích.</CardDescription>
         </div>
         <div className="flex shrink-0 items-end gap-2">
-          <label className="space-y-1 text-xs text-slate-500">
-            <span>Tháng thống kê · Giờ Việt Nam</span>
-            <Input type="month" aria-label="Tháng thống kê yêu thích" min="2000-01" max="2100-12" value={selected}
-              onChange={event => {
-                const value = event.target.value;
-                if (/^\d{4}-(0[1-9]|1[0-2])$/.test(value) && value >= "2000-01" && value <= "2100-12") setSelected(value);
-              }} className="w-48" />
-          </label>
+          <span className="text-xs text-slate-500">Tháng {month}/{year}</span>
           <Button variant="outline" size="icon" aria-label="Làm mới thống kê yêu thích" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
           </Button>

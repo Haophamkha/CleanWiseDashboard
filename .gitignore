@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Local dependency cache
 /.npm-cache/
+
+# Isolated local invitation preview
+.next-invitation-preview/

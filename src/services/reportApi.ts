@@ -1,5 +1,6 @@
 import { baseApi, requestBlob } from "@/store/baseApi";
 import type { MonthlyFavoriteReport } from "@/types/Report";
+import type { MonthlyVipReport, VipParams, AuditRow } from "@/types/Report";
 import type { ReportBooking, ReportOverview, ReportPage, ReportParams, ReportRevenue, ReportService, ReportWorker, WorkerSort } from "@/types/Report";
 
 const unwrap = <T,>(response: unknown): T => {
@@ -10,6 +11,18 @@ const tags = [{ type: "Bookings", id: "LIST" }, "Workers", { type: "Workers", id
 type PageParams = ReportParams & { page?: number; page_size?: number; sort?: WorkerSort };
 export const reportApi = baseApi.injectEndpoints({
   endpoints: builder => ({
+    getMonthlyVip: builder.query<MonthlyVipReport, VipParams>({
+      query: params => ({ url: "/api/admin/reports/vip-customers/", method: "GET", params }),
+      transformResponse: unwrap, providesTags: [...tags, { type: "Vouchers", id: "VIP" }],
+    }),
+    rewardMonthlyVip: builder.mutation<{ assigned_count: number; skipped_count: number }, VipParams & { customer_ids: number[]; voucher_id: number }>({
+      query: data => ({ url: "/api/admin/reports/vip-customers/reward/", method: "POST", data }),
+      transformResponse: unwrap,
+      invalidatesTags: [{ type: "Vouchers", id: "VIP" }, { type: "Vouchers", id: "LIST" }],
+    }),
+    getReportAudit: builder.query<ReportPage<AuditRow>, PageParams & { kind: string }>({
+      query: params => ({ url: "/api/admin/reports/audit/", method: "GET", params }), transformResponse: unwrap, providesTags: [...tags],
+    }),
     getMonthlyFavorites: builder.query<MonthlyFavoriteReport, { year: number; month: number }>({
       query: params => ({ url: "/api/admin/reports/favorite-workers/", method: "GET", params }),
       transformResponse: unwrap,
@@ -22,7 +35,7 @@ export const reportApi = baseApi.injectEndpoints({
     getReportRevenue: builder.query<ReportPage<ReportRevenue>, PageParams>({ query: params => ({url: "/api/admin/reports/revenue/", method: "GET", params}), transformResponse: unwrap, providesTags: [...tags] }),
   }),
 });
-export const { useGetMonthlyFavoritesQuery, useGetReportOverviewQuery, useGetReportWorkersQuery, useGetReportServicesQuery, useGetReportBookingsQuery, useGetReportRevenueQuery } = reportApi;
+export const { useGetMonthlyFavoritesQuery, useGetMonthlyVipQuery, useRewardMonthlyVipMutation, useGetReportAuditQuery, useGetReportOverviewQuery, useGetReportWorkersQuery, useGetReportServicesQuery, useGetReportBookingsQuery, useGetReportRevenueQuery } = reportApi;
 
 export async function downloadReport(params: ReportParams, filename: string) {
   const blob = await requestBlob("/api/admin/reports/export/", params);
