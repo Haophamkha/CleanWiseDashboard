@@ -401,7 +401,7 @@ export function WalletsPage() {
                     {t.booking_id ? (
                       <Link
                         href={`/bookings/${t.booking_id}`}
-                        className="text-blue-600 hover:underline"
+                        className="whitespace-nowrap text-blue-600 hover:underline"
                       >
                         {t.booking_code ?? `#${t.booking_id}`}
                       </Link>

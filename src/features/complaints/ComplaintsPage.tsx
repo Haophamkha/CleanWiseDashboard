@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetComplaintsQuery } from "@/services/complaintApi";
 import { useDebounced } from "@/features/refunds/refund-utils";
 import { ComplaintsFilter } from "./ComplaintsFilter";
 import { ComplaintsTable } from "./ComplaintsTable";
 import { ComplaintResolveModal } from "./ComplaintResolveModal";
+import { DisciplineInbox } from "./DisciplineInbox";
 import type {
   ComplaintReporterRole,
   ComplaintStage,
@@ -13,6 +15,19 @@ import type {
 } from "@/types/Complaint";
 
 export function ComplaintsPage() {
+  return (
+    <Tabs defaultValue="complaints">
+      <TabsList aria-label="Mục quản lý khiếu nại" className="h-auto flex-wrap">
+        <TabsTrigger value="complaints">Khiếu nại</TabsTrigger>
+        <TabsTrigger value="discipline">Điểm tín nhiệm nhân viên</TabsTrigger>
+      </TabsList>
+      <TabsContent value="complaints"><ComplaintInbox /></TabsContent>
+      <TabsContent value="discipline"><DisciplineInbox /></TabsContent>
+    </Tabs>
+  );
+}
+
+function ComplaintInbox() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | "">("");
   const [stageFilter, setStageFilter] = useState<ComplaintStage | "">("");

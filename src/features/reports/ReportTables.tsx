@@ -302,7 +302,7 @@ export function BookingTable({ params }: { params: ReportParams }) {
           render: (row) => (
             <div>
               <Link
-                className="font-medium text-blue-600 hover:underline"
+                className="whitespace-nowrap font-medium text-blue-600 hover:underline"
                 href={`/bookings/${row.id}`}
               >
                 {row.booking_code}
@@ -438,7 +438,7 @@ export function RevenueTable({ params }: { params: ReportParams }) {
           render: (row) => (
             <div>
               <Link
-                className="font-medium text-blue-600 hover:underline"
+                className="whitespace-nowrap font-medium text-blue-600 hover:underline"
                 href={`/bookings/${row.booking_id}`}
               >
                 {row.booking_code}

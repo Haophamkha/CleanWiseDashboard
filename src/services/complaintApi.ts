@@ -105,6 +105,7 @@ export const complaintApi = baseApi.injectEndpoints({
       // Khi xử lý kèm hoàn tiền, đơn (refunded_amount, trạng thái thanh toán,
       // lịch sử) và danh sách giao dịch ví đều thay đổi nên cần tải lại.
       invalidatesTags: (result, _error, { id }) => [
+        { type: "Complaints", id: "DISCIPLINE" },
         {
           type: "Complaints",
           id,

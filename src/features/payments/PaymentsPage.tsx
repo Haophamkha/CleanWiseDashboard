@@ -220,7 +220,7 @@ export function PaymentsPage() {
                 <TableCell className="px-4 py-3">
                   <Link
                     href={`/bookings/${p.booking}`}
-                    className="text-blue-600 hover:underline"
+                    className="whitespace-nowrap text-blue-600 hover:underline"
                   >
                     {p.booking_code ?? `#${p.booking}`}
                   </Link>
