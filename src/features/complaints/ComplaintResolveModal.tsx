@@ -44,6 +44,7 @@ const RESOLVE_ACTIONS: {
 const OUTCOME_LABEL: Record<Exclude<ComplaintOutcome, "">, string> = {
   REFUND_CUSTOMER: "Đã hoàn tiền cho khách",
   PAY_WORKER: "Đã trả thu nhập cho nhân viên",
+  RECOVER_WORKER_EARNING: "Đã xử lý thu hồi tiền công nhân viên",
 };
 
 const OUTCOME_OPTIONS: Record<
@@ -56,6 +57,11 @@ const OUTCOME_OPTIONS: Record<
       value: "REFUND_CUSTOMER",
       label: "Hoàn tiền cho khách",
       hint: "Hoàn đúng phần tiền của buổi này vào ví khách, không vượt phần đã thu và không hoàn trùng.",
+    },
+    {
+      value: "RECOVER_WORKER_EARNING",
+      label: "Thu hồi tiền công nhân viên",
+      hint: "Chỉ điều chỉnh ví nhân viên theo khiếu nại này. Khoản khách đã thanh toán được giữ nguyên.",
     },
   ],
   WORKER: [
@@ -130,17 +136,19 @@ export function ComplaintResolveModal({
   const isWorkerReporter = detail?.reporter_role === "WORKER";
   const hasSchedule = !!detail?.schedule;
 
-    const outcomeOptions = (
-      OUTCOME_OPTIONS[detail?.reporter_role ?? "CUSTOMER"] ?? []
-    ).filter(
-      (o) => !(o.value === "REFUND_CUSTOMER" && detail?.booking_is_cash),
-    );
+  const outcomeOptions = OUTCOME_OPTIONS[detail?.reporter_role ?? "CUSTOMER"].filter((option) => {
+    if (option.value === "REFUND_CUSTOMER") return !detail?.booking_is_cash && !detail?.service_used;
+    if (option.value === "RECOVER_WORKER_EARNING") {
+      return !!detail?.service_used && !!detail.worker && !detail.booking_is_cash;
+    }
+    return true;
+  });
 
   const selectedOption = outcomeOptions.find((o) => o.value === outcome);
 
   const isOpen = detail?.status === "PENDING" || detail?.status === "IN_REVIEW";
 
-  const previewReady = isOpen && hasSchedule && outcome !== "";
+  const previewReady = isOpen && hasSchedule && !!selectedOption?.value;
 
   const preview = useGetComplaintPreviewQuery(
     {
@@ -160,6 +168,14 @@ export function ComplaintResolveModal({
 
   const handleResolve = async (status: ResolveComplaintRequest["status"]) => {
     setError(null);
+
+    if (status === "RESOLVED" && outcome !== "") {
+      if (!previewReady || preview.isFetching || preview.isError || !preview.currentData) return;
+      if (outcome === "RECOVER_WORKER_EARNING" && !note.trim()) {
+        setError("Vui lòng nhập căn cứ thu hồi tiền công.");
+        return;
+      }
+    }
 
     // Tiền chỉ được xử lý kèm "Đã xử lý xong".
     const moneyPart =
@@ -417,7 +433,11 @@ export function ComplaintResolveModal({
                   <p className="text-sm font-medium text-slate-900">
                     Xử lý tiền
                   </p>
-                  {detail.booking_is_cash && !isWorkerReporter && (
+                  {detail.service_used && !isWorkerReporter ? (
+                    <p className="text-xs text-slate-600">
+                      Khách đã sử dụng dịch vụ và vẫn thanh toán theo đơn.
+                    </p>
+                  ) : detail.booking_is_cash && !isWorkerReporter && (
                     <p className="text-xs text-amber-700">
                       Đơn tiền mặt: khách đã trả trực tiếp cho nhân viên nên
                       không hoàn qua ví được.
@@ -481,27 +501,27 @@ export function ComplaintResolveModal({
                         <p className="text-slate-500">Đang tính...</p>
                       ) : previewError ? (
                         <p className="text-red-600">{previewError}</p>
-                      ) : preview.data ? (
+                      ) : preview.currentData ? (
                         <div className="space-y-0.5">
                           <p>
                             Ví khách hàng:{" "}
-                            <b>{signed(preview.data.customer_delta)}</b>
+                            <b>{signed(preview.currentData.customer_delta)}</b>
                           </p>
 
                           <p>
                             Ví nhân viên:{" "}
-                            <b>{signed(preview.data.worker_delta)}</b>
+                            <b>{signed(preview.currentData.worker_delta)}</b>
                           </p>
 
-                          {Number(preview.data.shortfall) > 0 && (
+                          {Number(preview.currentData.shortfall) > 0 && (
                             <p className="text-xs text-amber-700">
                               Không thu hồi được{" "}
-                              {vnd(Number(preview.data.shortfall))} (nền tảng
+                              {vnd(Number(preview.currentData.shortfall))} (nền tảng
                               chịu).
                             </p>
                           )}
 
-                          {preview.data.notes.map((note) => (
+                          {preview.currentData.notes.map((note) => (
                             <p key={note} className="text-xs text-slate-500">
                               {note}
                             </p>
@@ -527,8 +547,8 @@ export function ComplaintResolveModal({
                       disabled={
                         isResolving ||
                         (action.status === "RESOLVED" &&
-                          previewReady &&
-                          (preview.isFetching || preview.isError))
+                          outcome !== "" &&
+                          (!previewReady || preview.isFetching || preview.isError || !preview.currentData))
                       }
                       onClick={() => handleResolve(action.status)}
                       className={`rounded-md px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${action.className}`}

@@ -10,7 +10,7 @@ export type ComplaintStage = "BEFORE_SERVICE" | "IN_SERVICE" | "AFTER_SERVICE";
 export type ComplaintReporterRole = "CUSTOMER" | "WORKER";
 
 /** Kết quả xử lý tiền do hệ thống tính. "" = không xử lý tiền. */
-export type ComplaintOutcome = "" | "REFUND_CUSTOMER" | "PAY_WORKER";
+export type ComplaintOutcome = "" | "REFUND_CUSTOMER" | "PAY_WORKER" | "RECOVER_WORKER_EARNING";
 
 export interface ComplaintAttachment {
   id: number;
@@ -66,6 +66,7 @@ export interface ComplaintDetail extends Complaint {
   /** Phần không thu hồi được do ví không đủ, nền tảng chịu (chỉ admin thấy). */
   shortfall: string;
   booking_is_cash: boolean;
+  service_used: boolean;
 
   attachments: ComplaintAttachment[];
 }
@@ -99,6 +100,6 @@ export interface ComplaintPreview {
 
 export interface GetComplaintPreviewParams {
   id: number;
-  outcome: "REFUND_CUSTOMER" | "PAY_WORKER";
+  outcome: Exclude<ComplaintOutcome, "">;
   charge_worker?: boolean;
 }
