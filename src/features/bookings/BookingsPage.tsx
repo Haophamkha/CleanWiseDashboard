@@ -213,7 +213,9 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Hủy đơn {booking.booking_code}?</DialogTitle>
+            <DialogTitle>
+              Hủy đơn <span className="whitespace-nowrap">{booking.booking_code}?</span>
+            </DialogTitle>
             <DialogDescription>
               Các buổi còn hiệu lực sẽ bị hủy. Đơn đã thanh toán sẽ chuyển sang
               quy trình hoàn tiền.

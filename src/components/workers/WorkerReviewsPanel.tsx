@@ -277,7 +277,7 @@ export default function WorkerReviewsPanel({ worker }: WorkerReviewsPanelProps) 
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    {review.booking_code} · Buổi {review.schedule.sequence_no} ·{" "}
+                    <span className="whitespace-nowrap">{review.booking_code}</span> · Buổi {review.schedule.sequence_no} ·{" "}
                     {formatDateTime(
                       review.schedule.actual_end ?? review.schedule.scheduled_end,
                     )}

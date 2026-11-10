@@ -134,6 +134,7 @@ export function ComplaintResolveModal({
   const [chargeWorker, setChargeWorker] = useState(true);
 
   const isWorkerReporter = detail?.reporter_role === "WORKER";
+  const isDiscipline = !!detail?.discipline_case;
   const hasSchedule = !!detail?.schedule;
 
   const outcomeOptions = OUTCOME_OPTIONS[detail?.reporter_role ?? "CUSTOMER"].filter((option) => {
@@ -148,7 +149,7 @@ export function ComplaintResolveModal({
 
   const isOpen = detail?.status === "PENDING" || detail?.status === "IN_REVIEW";
 
-  const previewReady = isOpen && hasSchedule && !!selectedOption?.value;
+  const previewReady = isOpen && hasSchedule && !isDiscipline && !!selectedOption?.value;
 
   const preview = useGetComplaintPreviewQuery(
     {
@@ -169,7 +170,7 @@ export function ComplaintResolveModal({
   const handleResolve = async (status: ResolveComplaintRequest["status"]) => {
     setError(null);
 
-    if (status === "RESOLVED" && outcome !== "") {
+    if (status === "RESOLVED" && outcome !== "" && !isDiscipline) {
       if (!previewReady || preview.isFetching || preview.isError || !preview.currentData) return;
       if (outcome === "RECOVER_WORKER_EARNING" && !note.trim()) {
         setError("Vui lòng nhập căn cứ thu hồi tiền công.");
@@ -179,7 +180,7 @@ export function ComplaintResolveModal({
 
     // Tiền chỉ được xử lý kèm "Đã xử lý xong".
     const moneyPart =
-      status === "RESOLVED" && outcome !== ""
+      status === "RESOLVED" && !isDiscipline && outcome !== ""
         ? {
             outcome,
             ...(outcome === "REFUND_CUSTOMER"
@@ -252,7 +253,9 @@ export function ComplaintResolveModal({
               <p className="text-sm font-medium text-gray-700">Đơn / buổi</p>
 
               <p className="text-sm text-gray-600">
-                {detail.booking_code || `#${detail.booking}`}
+                <span className="whitespace-nowrap">
+                  {detail.booking_code || `#${detail.booking}`}
+                </span>
                 {detail.schedule_sequence_no
                   ? ` · Buổi ${detail.schedule_sequence_no}`
                   : " · Chưa gắn buổi"}
@@ -424,12 +427,16 @@ export function ComplaintResolveModal({
                       setError(null);
                     }
                   }}
-                  placeholder="Ghi chú xử lý (tùy chọn)"
+                  placeholder={isDiscipline ? "Căn cứ xử lý (bắt buộc khi kết luận)" : "Ghi chú xử lý (tùy chọn)"}
                   rows={4}
                   className="w-full rounded-md border border-gray-300 p-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
 
-                <div className="space-y-2 rounded-lg border border-slate-200 p-3">
+                {isDiscipline ? (
+                  <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
+                    Chấp nhận khiếu nại sẽ miễn điểm và tính lại giới hạn nhận việc hoặc quyết định xử lý hồ sơ.
+                  </p>
+                ) : <div className="space-y-2 rounded-lg border border-slate-200 p-3">
                   <p className="text-sm font-medium text-slate-900">
                     Xử lý tiền
                   </p>
@@ -537,6 +544,7 @@ export function ComplaintResolveModal({
                   </p>
                 </div>
 
+                }
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
                 <div className="flex flex-wrap gap-2">
@@ -547,13 +555,13 @@ export function ComplaintResolveModal({
                       disabled={
                         isResolving ||
                         (action.status === "RESOLVED" &&
-                          outcome !== "" &&
+                          outcome !== "" && !isDiscipline &&
                           (!previewReady || preview.isFetching || preview.isError || !preview.currentData))
                       }
                       onClick={() => handleResolve(action.status)}
                       className={`rounded-md px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${action.className}`}
                     >
-                      {isResolving ? "Đang xử lý..." : action.label}
+                      {isResolving ? "Đang xử lý..." : isDiscipline && action.status === "RESOLVED" ? "Chấp nhận và miễn điểm" : action.label}
                     </button>
                   ))}
                 </div>
