@@ -26,6 +26,8 @@ export type WorkerProfile = {
     section_code: string;
     name: string;
   } | null;
+  requested_service?: { id: number; name: string } | null;
+  service_request_token?: string | null;
   portrait: string | null;
   identity_front: string | null;
   identity_back: string | null;
@@ -53,4 +55,39 @@ export type UpdateWorkerStatusRequest = {
   status: "DRAFT" | "ACTIVE" | "REJECTED" | "SUSPENDED";
   reason?: string;
   rejected_fields?: Record<string, string>;
+};
+
+export type UpdateWorkerContactRequest = {
+  previous_phone_number: string | null;
+  phone_number: string;
+  reason: string;
+  confirmed_with_worker: boolean;
+};
+
+export type WorkerReviewAction =
+  | "SUBMITTED"
+  | "RESUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "SUSPENDED"
+  | "REACTIVATED"
+  | "REVOKED"
+  | "SERVICE_REQUESTED"
+  | "SERVICE_APPROVED"
+  | "SERVICE_REJECTED"
+  | "CONTACT_UPDATED";
+
+export type WorkerReviewEvent = {
+  id: number;
+  action: WorkerReviewAction;
+  actor_name: string;
+  previous_status: WorkerStatus;
+  new_status: WorkerStatus;
+  reason: string;
+  rejected_fields: Record<string, string>;
+  changes?: {
+    phone_number?: { before: string | null; after: string };
+    service?: { before: string | null; after: string };
+  };
+  created_at: string;
 };

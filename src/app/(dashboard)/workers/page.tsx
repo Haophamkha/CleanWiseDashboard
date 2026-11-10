@@ -45,6 +45,7 @@ import type { WorkerProfile } from "@/types/Worker";
 const FILTERS: { value: WorkerListFilter; label: string }[] = [
   { value: "ACTIVE", label: "Đang làm việc" },
   { value: "PENDING", label: "Chờ duyệt" },
+  { value: "SERVICE_CHANGE", label: "Đổi dịch vụ" },
   { value: "SUSPENDED", label: "Tạm khóa" },
   { value: "REJECTED", label: "Đã từ chối" },
   { value: "DRAFT", label: "Chưa hoàn tất" },
@@ -158,6 +159,7 @@ function WorkersContent() {
         worker.email,
         worker.phone_number ?? "",
         worker.registered_service?.name ?? "",
+        worker.requested_service?.name ?? "",
       ].some((value) => value.toLocaleLowerCase("vi").includes(query)),
     );
   }, [search, workers]);
@@ -227,7 +229,7 @@ function WorkersContent() {
               onValueChange={(value) => setFilter(value as WorkerListFilter)}
               className="hidden xl:block"
             >
-              <TabsList>
+              <TabsList className="h-auto flex-wrap">
                 {FILTERS.map((item) => (
                   <TabsTrigger key={item.value} value={item.value}>
                     {item.label}
@@ -366,6 +368,11 @@ function WorkersContent() {
                         {worker.registered_service?.name || "Chưa đăng ký"}
                       </span>
                     </div>
+                    {worker.requested_service && (
+                      <p className="mt-1 truncate text-xs text-amber-700" title={worker.requested_service.name}>
+                        Đề xuất đổi sang {worker.requested_service.name}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell>
                     <WorkerStatusBadge status={worker.status} />
