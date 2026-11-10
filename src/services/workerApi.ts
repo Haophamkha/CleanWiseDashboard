@@ -1,8 +1,10 @@
 import { baseApi } from "@/store/baseApi";
 import type { WorkerSchedule } from "@/types/WorkerSchedule";
 import type {
+  UpdateWorkerContactRequest,
   UpdateWorkerStatusRequest,
   WorkerProfile,
+  WorkerReviewEvent,
   WorkerStatus,
 } from "@/types/Worker";
 
@@ -17,7 +19,12 @@ const unwrap = <T,>(response: unknown): T => {
   return response as T;
 };
 
-export type WorkerListFilter = WorkerStatus | "ALL";
+export type WorkerListFilter = WorkerStatus | "ALL" | "SERVICE_CHANGE";
+
+type WorkerReviewPage = {
+  next: string | null;
+  results: WorkerReviewEvent[];
+};
 
 export const workerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -40,6 +47,46 @@ export const workerApi = baseApi.injectEndpoints({
       }),
       transformResponse: unwrap,
       providesTags: ["Workers"],
+    }),
+
+    getWorkerReviewHistory: builder.infiniteQuery<WorkerReviewPage, number, string | null>({
+      query: ({ queryArg: profileId, pageParam: cursor }) => ({
+        url: `/api/auth/admin/worker-profiles/${profileId}/review-history/`,
+        method: "GET",
+        params: cursor ? { cursor } : undefined,
+      }),
+      transformResponse: unwrap,
+      infiniteQueryOptions: {
+        initialPageParam: null,
+        getNextPageParam: (page) => page.next
+          ? new URL(page.next).searchParams.get("cursor") ?? undefined
+          : undefined,
+      },
+      providesTags: (_data, _error, id) => [{ type: "Workers", id: `REVIEW-HISTORY-${id}` }],
+    }),
+
+    updateWorkerContact: builder.mutation<WorkerProfile, { id: number } & UpdateWorkerContactRequest>({
+      query: ({ id, ...body }) => ({
+        url: `/api/auth/admin/worker-profiles/${id}/contact/`,
+        method: "PATCH",
+        data: body,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: (result, error) =>
+        result || (error as { status?: number } | undefined)?.status === 409 ? ["Workers"] : [],
+    }),
+
+    reviewWorkerService: builder.mutation<
+      WorkerProfile,
+      { id: number; request_token: string; decision: "APPROVE" | "REJECT"; reason?: string }
+    >({
+      query: ({ id, ...data }) => ({
+        url: `/api/auth/admin/worker-profiles/${id}/service-request/`,
+        method: "PATCH",
+        data,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: ["Workers"],
     }),
 
     updateWorkerStatus: builder.mutation<
@@ -74,7 +121,8 @@ export const workerApi = baseApi.injectEndpoints({
                   const belongsToList =
                     !statusFilter ||
                     statusFilter === "ALL" ||
-                    statusFilter === updatedWorker.status;
+                    statusFilter === updatedWorker.status ||
+                    (statusFilter === "SERVICE_CHANGE" && !!updatedWorker.requested_service);
 
                   if (index >= 0 && belongsToList) {
                     workers[index] = updatedWorker;
@@ -93,7 +141,11 @@ export const workerApi = baseApi.injectEndpoints({
       },
       // Trạng thái ACTIVE/SUSPENDED ảnh hưởng danh sách có thể phân công,
       // nhưng không cần tải lại danh sách quản lý nhân viên.
-      invalidatesTags: [{ type: "Workers", id: "AVAILABLE" }, "Notifications"],
+      invalidatesTags: (_data, _error, { id }) => [
+        { type: "Workers", id: "AVAILABLE" },
+        { type: "Workers", id: `REVIEW-HISTORY-${id}` },
+        "Notifications",
+      ],
     }),
   }),
 
@@ -103,5 +155,8 @@ export const workerApi = baseApi.injectEndpoints({
 export const {
   useGetWorkerScheduleQuery,
   useGetWorkerProfilesQuery,
+  useGetWorkerReviewHistoryInfiniteQuery,
+  useUpdateWorkerContactMutation,
+  useReviewWorkerServiceMutation,
   useUpdateWorkerStatusMutation,
 } = workerApi;

@@ -46,6 +46,7 @@ export interface Complaint {
 }
 
 export interface ComplaintDetail extends Complaint {
+  discipline_case?: number | null;
   reporter: number;
 
   content: string;

@@ -118,7 +118,7 @@ export function BookingDetailPage({ id }: { id: number }) {
             Danh sách đơn
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="whitespace-nowrap text-2xl font-bold text-slate-900">
               {booking.booking_code}
             </h1>
             <StatusBadge status={booking.status} label={booking.status_label} />

@@ -10,9 +10,11 @@ import {
   CalendarDays,
   CheckCircle2,
   FileText,
+  History,
   Loader2,
   LockKeyhole,
   Mail,
+  Pencil,
   Phone,
   ShieldCheck,
   Star,
@@ -36,6 +38,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUpdateWorkerStatusMutation } from "@/services/workerApi";
 import type { WorkerProfile } from "@/types/Worker";
 import WorkerReviewsPanel from "./WorkerReviewsPanel";
+import WorkerContactForm from "./WorkerContactForm";
+import WorkerServiceReview from "./WorkerServiceReview";
+import WorkerReviewHistoryPanel from "./WorkerReviewHistoryPanel";
 import WorkerSchedulePanel from "./WorkerSchedulePanel";
 import { workerName, WorkerStatusBadge } from "./worker-ui";
 import {
@@ -47,6 +52,7 @@ import {
 
 type ActionView =
   | "DETAIL"
+  | "EDIT_CONTACT"
   | "APPROVE"
   | "REJECT"
   | "REVOKE"
@@ -197,7 +203,7 @@ export default function WorkerDetailModal({
     worker.status === "ACTIVE" || worker.status === "SUSPENDED";
   const rejecting = view === "REJECT" || view === "REVOKE";
   const revoking = view === "REVOKE";
-  const visibleTab = showWorkTabs && !rejecting ? tab : "profile";
+  const visibleTab = !rejecting && (showWorkTabs || tab === "history") ? tab : "profile";
   const suggestions = getProfileSuggestions(worker);
   const toggleField = (field: RejectableField) =>
     setRejectedFields((current) => {
@@ -277,8 +283,14 @@ export default function WorkerDetailModal({
             className="flex min-h-0 flex-1 flex-col"
           >
             <div className="shrink-0 border-b border-slate-200 px-6 py-3">
-              <TabsList>
+              <TabsList className="h-auto max-w-full flex-wrap">
                 <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
+                {!rejecting && (
+                  <TabsTrigger value="history">
+                    <History aria-hidden="true" className="mr-1.5 size-4" />
+                    Lịch sử duyệt
+                  </TabsTrigger>
+                )}
                 {showWorkTabs && !rejecting && (
                   <>
                     <TabsTrigger value="schedule">Lịch làm việc</TabsTrigger>
@@ -292,6 +304,9 @@ export default function WorkerDetailModal({
               value="profile"
               className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 py-5"
             >
+              {!rejecting && worker.requested_service && worker.service_request_token && (
+                <WorkerServiceReview key={worker.service_request_token} worker={worker} />
+              )}
               <ProfileContent
                 worker={worker}
                 rejecting={rejecting}
@@ -316,6 +331,11 @@ export default function WorkerDetailModal({
                 }}
               />
             </TabsContent>
+            {!rejecting && (
+              <TabsContent value="history" className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                {visibleTab === "history" && <WorkerReviewHistoryPanel worker={worker} />}
+              </TabsContent>
+            )}
             {showWorkTabs && (
               <>
                 <TabsContent
@@ -370,6 +390,13 @@ export default function WorkerDetailModal({
                 </Button>
               )}
               {!rejecting &&
+                visibleTab === "profile" && (
+                  <Button type="button" variant="outline" onClick={() => setView("EDIT_CONTACT")}>
+                    <Pencil aria-hidden="true" className="h-4 w-4" />
+                    Sửa thông tin liên hệ
+                  </Button>
+                )}
+              {!rejecting &&
                 visibleTab === "profile" &&
                 worker.status === "PENDING" && (
                   <>
@@ -418,6 +445,23 @@ export default function WorkerDetailModal({
                 )}
             </div>
           </Tabs>
+        ) : view === "EDIT_CONTACT" ? (
+          <WorkerContactForm
+            worker={worker}
+            onCancel={() => setView("DETAIL")}
+            onSaved={() => {
+              toast.success("Đã lưu số điện thoại.");
+              setTab("history");
+              setView("DETAIL");
+            }}
+            onRequestReview={worker.status === "ACTIVE" || worker.status === "PENDING"
+              ? () => {
+                  setReason("");
+                  setRejectedFields({});
+                  setView(worker.status === "ACTIVE" ? "REVOKE" : "REJECT");
+                }
+              : undefined}
+          />
         ) : (
           <ActionContent
             view={view}
@@ -440,6 +484,7 @@ export default function WorkerDetailModal({
 function actionTitle(view: ActionView) {
   return {
     DETAIL: "Chi tiết nhân viên",
+    EDIT_CONTACT: "Sửa thông tin liên hệ",
     APPROVE: "Duyệt hồ sơ",
     REJECT: "Từ chối hồ sơ",
     REVOKE: "Thu hồi phê duyệt",
@@ -913,7 +958,7 @@ function ActionContent({
   onSuspend,
   onReactivate,
 }: {
-  view: Exclude<ActionView, "DETAIL" | "REJECT" | "REVOKE">;
+  view: Exclude<ActionView, "DETAIL" | "EDIT_CONTACT" | "REJECT" | "REVOKE">;
   reason: string;
   setReason: (value: string) => void;
   isLoading: boolean;
