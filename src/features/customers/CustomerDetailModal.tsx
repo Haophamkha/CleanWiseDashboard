@@ -22,6 +22,7 @@ import {
 import { ProfileInfoCard } from "@/components/ui/profile-info-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SupportChatPanel } from "@/features/chat/SupportChatPanel";
 import { UserWalletPanel } from "@/features/refunds/UserWalletPanel";
 import { useGetCustomerDetailQuery } from "@/services/userApi";
 
@@ -54,7 +55,7 @@ export function CustomerDetailModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flex max-h-[min(90vh,calc(100dvh-2rem))] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
+      <DialogContent className={`flex max-h-[min(90vh,calc(100dvh-2rem))] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0 ${tab === "contact" ? "h-[min(42rem,calc(100dvh-2rem))]" : ""}`}>
         <DialogHeader className="mb-0 shrink-0 border-b border-slate-200 px-6 pb-4 pt-6 pr-12">
           <DialogTitle>Chi tiết khách hàng</DialogTitle>
           <DialogDescription>
@@ -67,9 +68,10 @@ export function CustomerDetailModal({
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="shrink-0 border-b border-slate-200 px-6 py-3">
-            <TabsList>
+            <TabsList className="h-auto flex-wrap">
               <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
               <TabsTrigger value="wallet">Ví</TabsTrigger>
+              {customer && <TabsTrigger value="contact">Nhắn tin liên hệ</TabsTrigger>}
             </TabsList>
           </div>
           <TabsContent
@@ -181,6 +183,9 @@ export function CustomerDetailModal({
             className="mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5"
           >
             {tab === "wallet" && <UserWalletPanel userId={id} />}
+          </TabsContent>
+          <TabsContent value="contact" className="mt-0 min-h-0 flex-1 overflow-hidden p-3 sm:px-6 sm:py-4">
+            {customer && tab === "contact" && <SupportChatPanel key={id} userId={id} name={name} role="customer" />}
           </TabsContent>
           <div className="flex shrink-0 justify-end border-t border-slate-200 bg-slate-50/70 px-6 py-4">
             <Button type="button" variant="outline" onClick={onClose}>

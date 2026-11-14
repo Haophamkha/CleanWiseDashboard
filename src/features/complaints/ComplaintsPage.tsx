@@ -4,19 +4,21 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetComplaintsQuery } from "@/services/complaintApi";
 import { useDebounced } from "@/features/refunds/refund-utils";
-import { ComplaintsFilter } from "./ComplaintsFilter";
+import { ComplaintsFilter, type ComplaintStatusFilter } from "./ComplaintsFilter";
 import { ComplaintsTable } from "./ComplaintsTable";
-import { ComplaintResolveModal } from "./ComplaintResolveModal";
 import { DisciplineInbox } from "./DisciplineInbox";
 import type {
   ComplaintReporterRole,
   ComplaintStage,
-  ComplaintStatus,
 } from "@/types/Complaint";
 
-export function ComplaintsPage() {
+export function ComplaintsPage({ initialTab }: { initialTab: "complaints" | "discipline" }) {
   return (
-    <Tabs defaultValue="complaints">
+    <Tabs defaultValue={initialTab} className="space-y-5">
+      <header>
+        <h1 className="text-2xl font-bold text-slate-950">Khiếu nại</h1>
+        <p className="mt-1 text-sm text-slate-500">Tiếp nhận phản ánh, theo dõi phương án và kết quả xử lý.</p>
+      </header>
       <TabsList aria-label="Mục quản lý khiếu nại" className="h-auto flex-wrap">
         <TabsTrigger value="complaints">Khiếu nại</TabsTrigger>
         <TabsTrigger value="discipline">Điểm tín nhiệm nhân viên</TabsTrigger>
@@ -29,81 +31,44 @@ export function ComplaintsPage() {
 
 function ComplaintInbox() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ComplaintStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<ComplaintStatusFilter>("");
   const [stageFilter, setStageFilter] = useState<ComplaintStage | "">("");
   const [reporterFilter, setReporterFilter] = useState<
     ComplaintReporterRole | ""
   >("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
   const debouncedSearch = useDebounced(search).trim();
 
   const {
-    data: complaints,
+    currentData: complaints,
     isLoading,
+    isFetching,
     isError,
+    refetch,
   } = useGetComplaintsQuery({
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(statusFilter === "SENT" || statusFilter === "ACCEPTED"
+      ? { workflow_status: statusFilter }
+      : statusFilter ? { status: statusFilter } : {}),
     ...(stageFilter ? { stage: stageFilter } : {}),
     ...(reporterFilter ? { reporter_role: reporterFilter } : {}),
   });
 
-  const pendingCount =
-    complaints?.filter((c) => c.status === "PENDING").length ?? 0;
-  const workerCount =
-    complaints?.filter((c) => c.reporter_role === "WORKER").length ?? 0;
-
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">
-            Quản lý khiếu nại
-          </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            {isLoading
-              ? "Đang tải dữ liệu..."
-              : `${complaints?.length ?? 0} khiếu nại${
-                  workerCount > 0 ? ` · ${workerCount} từ nhân viên` : ""
-                }${pendingCount > 0 ? ` · ${pendingCount} đang chờ xử lý` : ""}`}
-          </p>
-        </div>
-
-        <ComplaintsFilter
-          search={search}
-          status={statusFilter}
-          stage={stageFilter}
-          reporterRole={reporterFilter}
-          onSearchChange={setSearch}
-          onStatusChange={setStatusFilter}
-          onStageChange={setStageFilter}
-          onReporterRoleChange={setReporterFilter}
-        />
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-16">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
-        </div>
-      )}
-
-      {isError && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          Không tải được danh sách khiếu nại. Vui lòng thử lại.
-        </div>
-      )}
-
-      {complaints && (
-        <ComplaintsTable complaints={complaints} onSelect={setSelectedId} />
-      )}
-
-      {selectedId !== null && (
-        <ComplaintResolveModal
-          complaintId={selectedId}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
+      <ComplaintsFilter
+        search={search}
+        status={statusFilter}
+        stage={stageFilter}
+        reporterRole={reporterFilter}
+        onSearchChange={setSearch}
+        onStatusChange={setStatusFilter}
+        onStageChange={setStageFilter}
+        onReporterRoleChange={setReporterFilter}
+        refreshing={isFetching}
+        onRefresh={() => void refetch()}
+      />
+      <ComplaintsTable complaints={complaints ?? []} loading={isLoading || (isFetching && !complaints)}
+        failed={isError} onRetry={() => void refetch()} />
     </div>
   );
 }

@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ProfileInfoCard as InfoCard } from "@/components/ui/profile-info-card";
+import { SupportChatPanel } from "@/features/chat/SupportChatPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateWorkerStatusMutation } from "@/services/workerApi";
@@ -203,7 +204,7 @@ export default function WorkerDetailModal({
     worker.status === "ACTIVE" || worker.status === "SUSPENDED";
   const rejecting = view === "REJECT" || view === "REVOKE";
   const revoking = view === "REVOKE";
-  const visibleTab = !rejecting && (showWorkTabs || tab === "history") ? tab : "profile";
+  const visibleTab = !rejecting && (showWorkTabs || tab === "history" || tab === "contact") ? tab : "profile";
   const suggestions = getProfileSuggestions(worker);
   const toggleField = (field: RejectableField) =>
     setRejectedFields((current) => {
@@ -261,7 +262,7 @@ export default function WorkerDetailModal({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className={`flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0 ${visibleTab === "schedule" && view === "DETAIL" ? "h-[90vh]" : ""}`}
+        className={`flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0 ${visibleTab === "schedule" && view === "DETAIL" ? "h-[90vh]" : ""} ${visibleTab === "contact" ? "h-[min(42rem,calc(100dvh-2rem))]" : ""}`}
       >
         <DialogHeader className="mb-0 shrink-0 border-b border-slate-200 px-6 pb-4 pt-6">
           <DialogTitle>
@@ -291,6 +292,7 @@ export default function WorkerDetailModal({
                     Lịch sử duyệt
                   </TabsTrigger>
                 )}
+                {!rejecting && <TabsTrigger value="contact">Nhắn tin liên hệ</TabsTrigger>}
                 {showWorkTabs && !rejecting && (
                   <>
                     <TabsTrigger value="schedule">Lịch làm việc</TabsTrigger>
@@ -334,6 +336,11 @@ export default function WorkerDetailModal({
             {!rejecting && (
               <TabsContent value="history" className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 py-5">
                 {visibleTab === "history" && <WorkerReviewHistoryPanel worker={worker} />}
+              </TabsContent>
+            )}
+            {!rejecting && (
+              <TabsContent value="contact" className="mt-0 min-h-0 flex-1 overflow-hidden p-3 sm:px-6 sm:py-4">
+                {visibleTab === "contact" && <SupportChatPanel key={worker.user_id} userId={worker.user_id} name={name} role="worker" />}
               </TabsContent>
             )}
             {showWorkTabs && (

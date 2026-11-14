@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -58,7 +59,7 @@ export default function ReportsDashboard({ module = "overview", month }: { modul
       </div>
     </header>
     <nav className="hidden flex-wrap gap-1 border-b border-slate-200 md:flex" aria-label="Các trang thống kê">{reportModules.map(item => <Link key={item.id} href={href(item.id)} aria-current={module === item.id ? "page" : undefined} className={`border-b-2 px-3 py-3 text-sm transition-colors ${module === item.id ? "border-blue-600 font-medium text-blue-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}>{item.label}</Link>)}</nav>
-    <label className="block space-y-1 text-xs text-slate-500 md:hidden">Trang thống kê<select value={module} onChange={event => router.push(href(event.target.value as ReportModule))} className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800">{reportModules.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+    <div className="md:hidden"><SelectField label="Trang thống kê" value={module} onValueChange={(value) => router.push(href(value as ReportModule))} options={reportModules.map((item) => ({ value: item.id, label: item.label }))} /></div>
     {needsOverview && isError ? <div role="alert" className="rounded-xl border border-rose-200 bg-white p-8 text-center"><AlertCircle className="mx-auto h-7 w-7 text-rose-400" /><p className="mt-2">Không tải được báo cáo</p><p className="my-2 text-sm text-slate-500">{apiError(error)}</p><Button variant="outline" onClick={() => refetch()}>Thử lại</Button></div> : <>
       {needsOverview && module !== "audit" && (summary ? <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-busy={isFetching}>{[
         { label: "Đơn dịch vụ", value: count(summary.total_orders), note: "Tạo trong kỳ báo cáo" },

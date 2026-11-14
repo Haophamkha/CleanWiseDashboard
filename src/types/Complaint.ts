@@ -41,11 +41,14 @@ export interface Complaint {
 
   status: ComplaintStatus;
   status_label: string;
+  workflow_status?: "SENT" | "ACCEPTED" | "DECLINED" | "COMPLETED" | null;
 
   created_at: string;
 }
 
 export interface ComplaintDetail extends Complaint {
+  customer_id?: number;
+  customer_name?: string;
   discipline_case?: number | null;
   reporter: number;
 
@@ -70,10 +73,55 @@ export interface ComplaintDetail extends Complaint {
   service_used: boolean;
 
   attachments: ComplaintAttachment[];
+  assigned_to?: number | null;
+  assigned_to_name?: string | null;
+  can_manage_workflow?: boolean;
+  next_update_at?: string | null;
+  requested_resolution_label?: string;
+  scheduled_start?: string | null;
+  actual_start?: string | null;
+  schedule_status?: string | null;
+  events?: { id: number; kind: string; label: string; message: string; is_public: boolean; created_at: string }[];
+  proposal?: {
+    id: number;
+    status: "SENT" | "ACCEPTED" | "DECLINED" | "COMPLETED";
+    status_label: string;
+    message: string;
+    service_action: "" | "REDO" | "CHANGE";
+    service_action_label: string;
+    scheduled_start: string | null;
+    worker_name: string | null;
+    refund_scope: "" | "SESSION" | "BOOKING" | "PARTIAL" | "CASH";
+    refund_scope_label: string;
+    refund_amount: string | null;
+    refund_transaction_code: string | null;
+    voucher_code: string | null;
+    fulfillment_booking: number | null;
+    fulfillment_booking_code: string | null;
+  } | null;
+}
+
+export interface ComplaintWorkflowRequest {
+  id: number;
+  action: "CLAIM" | "ACK" | "REQUEST" | "VERIFY" | "OFFER" | "SCHEDULE_REDO" | "COMPLETE" | "REJECT";
+  message?: string;
+  basis?: string;
+  reopen_instructions?: string;
+  next_update_at?: string;
+  proposal_id?: number;
+  service_action?: "REDO" | "CHANGE";
+  scheduled_start?: string;
+  worker?: number;
+  voucher?: number;
+  refund_scope?: "SESSION" | "BOOKING" | "PARTIAL" | "CASH";
+  refund_amount?: string;
+  cash_reference?: string;
+  recover_worker_earning?: boolean;
 }
 
 export interface GetComplaintsParams {
   status?: ComplaintStatus;
+  workflow_status?: "SENT" | "ACCEPTED";
   stage?: ComplaintStage;
   issue_type?: number;
   reporter_role?: ComplaintReporterRole;

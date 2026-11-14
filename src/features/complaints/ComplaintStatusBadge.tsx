@@ -1,6 +1,6 @@
 // ComplaintStatusBadge.tsx
 import { StatusPill, type StatusTone } from "@/components/ui/status-pill";
-import type { ComplaintStatus } from "@/types/Complaint";
+import type { Complaint, ComplaintStatus } from "@/types/Complaint";
 
 const STATUS_CONFIG: Record<
   ComplaintStatus,
@@ -28,7 +28,12 @@ const STATUS_CONFIG: Record<
   },
 };
 
-export function ComplaintStatusBadge({ status }: { status: ComplaintStatus }) {
+export function ComplaintStatusBadge({ status, workflowStatus }: {
+  status: ComplaintStatus;
+  workflowStatus?: Complaint["workflow_status"];
+}) {
+  if (status === "IN_REVIEW" && workflowStatus === "SENT") return <StatusPill tone="amber">Chờ khách phản hồi</StatusPill>;
+  if (status === "IN_REVIEW" && workflowStatus === "ACCEPTED") return <StatusPill tone="blue">Đang thực hiện</StatusPill>;
   const config = STATUS_CONFIG[status];
 
   return <StatusPill tone={config.tone}>{config.label}</StatusPill>;

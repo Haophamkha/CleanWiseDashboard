@@ -74,7 +74,13 @@ export default function AdminNotifications() {
                 socket.send(JSON.stringify({ type: "ping" }));
             }, 25000);
           } else if (message.type === "profile.review.changed") refresh(true);
-          else if (message.type === "complaint.changed") refresh();
+          else if (message.type === "complaint.changed") {
+            const id = message.payload?.complaint_id ?? message.complaint_id;
+            dispatch(baseApi.util.invalidateTags([
+              "Notifications", { type: "Complaints", id: "LIST" },
+              ...(typeof id === "number" ? [{ type: "Complaints" as const, id }] : ["Complaints" as const]),
+            ]));
+          }
           else if (message.type === "notification.unread") refresh();
         } catch {
           /* Ignore malformed realtime messages; HTTP remains authoritative. */

@@ -3,6 +3,7 @@ import type {
   Complaint,
   ComplaintDetail,
   ComplaintPreview,
+  ComplaintWorkflowRequest,
   GetComplaintsParams,
   GetComplaintPreviewParams,
   ResolveComplaintRequest,
@@ -89,6 +90,20 @@ export const complaintApi = baseApi.injectEndpoints({
       keepUnusedDataFor: 0,
     }),
 
+    updateComplaintWorkflow: builder.mutation<ComplaintDetail, ComplaintWorkflowRequest>({
+      query: ({ id, ...data }) => ({ url: `${BASE_PATH}/${id}/workflow/`, method: "POST", data }),
+      transformResponse: unwrapResponse<ComplaintDetail>,
+      invalidatesTags: (result, _error, { id }) => [
+        { type: "Complaints", id }, { type: "Complaints", id: "LIST" },
+        ...(result ? [
+          { type: "Bookings" as const, id: result.booking },
+          { type: "Bookings" as const, id: `TIMELINE-${result.booking}` },
+          { type: "Wallets" as const, id: "LIST" },
+          { type: "Wallets" as const, id: "TARGETS" },
+          { type: "Vouchers" as const, id: "LIST" },
+        ] : []),
+      ],
+    }),
     resolveComplaint: builder.mutation<
       ComplaintDetail,
       ResolveComplaintRequest
@@ -131,6 +146,7 @@ export const complaintApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useUpdateComplaintWorkflowMutation,
   useGetComplaintsQuery,
   useGetComplaintDetailQuery,
   useGetComplaintPreviewQuery,

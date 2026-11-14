@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useRef } from "react";
 import { AlertCircle, Heart, RefreshCw, Trophy, UsersRound } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
@@ -90,19 +91,19 @@ export default function MonthlyFavorites({ refreshKey, selected }: { refreshKey:
                 <h3 className="mb-3 text-sm font-semibold text-slate-700">Top 10 nhân viên · Tháng {month}/{year}</h3>
                 {data.top_workers.length ? (
                   <div className="max-h-80 overflow-auto">
-                    <table className="w-full text-left text-sm">
+                    <Table className="text-left">
                       <caption className="sr-only">Xếp hạng nhân viên theo số khách thêm yêu thích trong tháng {month}/{year}</caption>
-                      <thead className="sticky top-0 bg-white text-xs text-slate-500"><tr><th className="pb-3 pr-3 font-medium">Hạng</th><th className="pb-3 font-medium">Nhân viên</th><th className="pb-3 pl-3 text-right font-medium">Số khách</th></tr></thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <TableHeader className="bg-slate-50/80"><TableRow><TableHead>Hạng</TableHead><TableHead>Nhân viên</TableHead><TableHead className="text-right">Số khách</TableHead></TableRow></TableHeader>
+                      <TableBody>
                         {data.top_workers.map(worker => (
-                          <tr key={worker.worker_id}>
-                            <td className="py-3 pr-3 align-top"><span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold ${worker.rank <= 3 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500"}`}>{worker.rank}</span></td>
-                            <td className="py-3"><p className="font-medium text-slate-800">{worker.name}</p><p className="mt-0.5 text-xs text-slate-400">@{worker.username}</p>{!worker.active_current && <Badge variant="outline" className="mt-1">Hiện không hoạt động</Badge>}</td>
-                            <td className="py-3 pl-3 text-right align-top font-semibold tabular-nums text-rose-600">{count(worker.favorite_count)}</td>
-                          </tr>
+                          <TableRow key={worker.worker_id}>
+                            <TableCell className="py-3 pr-3 align-top"><span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold ${worker.rank <= 3 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500"}`}>{worker.rank}</span></TableCell>
+                            <TableCell className="py-3"><p className="font-medium text-slate-800">{worker.name}</p><p className="mt-0.5 text-xs text-slate-400">@{worker.username}</p>{!worker.active_current && <Badge variant="outline" className="mt-1">Hiện không hoạt động</Badge>}</TableCell>
+                            <TableCell className="py-3 pl-3 text-right align-top font-semibold tabular-nums text-rose-600">{count(worker.favorite_count)}</TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 ) : <p className="flex h-72 items-center justify-center text-sm text-slate-400">Chưa có lượt thêm yêu thích trong tháng này.</p>}
               </div>
