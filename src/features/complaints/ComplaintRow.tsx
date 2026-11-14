@@ -1,104 +1,47 @@
-// ComplaintRow.tsx
-import type { Complaint, ComplaintReporterRole } from "@/types/Complaint";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import type { Complaint } from "@/types/Complaint";
 import { ComplaintStatusBadge } from "./ComplaintStatusBadge";
+import { formatComplaintDate } from "./complaint-format";
 
-interface ComplaintRowProps {
-  complaint: Complaint;
-  onSelect: (id: number) => void;
-}
-
-const ROLE_STYLE: Record<
-  ComplaintReporterRole,
-  { label: string; className: string }
-> = {
-  CUSTOMER: { label: "Khách", className: "bg-blue-50 text-blue-700" },
-  WORKER: { label: "Nhân viên", className: "bg-amber-50 text-amber-700" },
-};
-
-export function ComplaintRow({ complaint, onSelect }: ComplaintRowProps) {
-  const role = ROLE_STYLE[complaint.reporter_role] ?? ROLE_STYLE.CUSTOMER;
-
+export function ComplaintRow({ complaint }: { complaint: Complaint }) {
+  const code = complaint.code ?? `#${complaint.id}`;
   return (
-    <tr
-      onClick={() => onSelect(complaint.id)}
-      className="cursor-pointer border-b border-gray-100 transition hover:bg-blue-50/40"
-    >
-      <td className="whitespace-nowrap px-4 py-3.5 font-mono text-sm font-medium text-gray-700">
-        {complaint.code ?? `#${complaint.id}`}
-      </td>
-
-      <td className="px-4 py-3.5 text-sm text-gray-600">
-        <span className="whitespace-nowrap">
-          {complaint.booking_code || `#${complaint.booking}`}
-        </span>
-        {complaint.schedule_sequence_no ? (
-          <div className="mt-0.5 text-xs text-gray-400">
-            Buổi {complaint.schedule_sequence_no}
-          </div>
-        ) : null}
-      </td>
-
-      <td className="px-4 py-3.5 text-sm">
-        <span
-          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${role.className}`}
-        >
-          {role.label}
-        </span>
-        <div className="mt-1 text-gray-900">
-          {complaint.reporter_name || "—"}
-        </div>
-      </td>
-
-      <td className="px-4 py-3.5 text-sm text-gray-600">
-        {complaint.worker_name ||
-          (complaint.worker ? `#${complaint.worker}` : "—")}
-      </td>
-
-      <td className="px-4 py-3.5 text-sm">
-        <div className="font-medium text-gray-900">
-          {complaint.issue_type_name}
-        </div>
-        <div className="mt-0.5 text-xs text-gray-400">
-          {complaint.issue_type_code}
-        </div>
-      </td>
-
-      <td className="px-4 py-3.5 text-sm text-gray-600">
-        {complaint.stage_label}
-      </td>
-
-      <td className="px-4 py-3.5">
-        <ComplaintStatusBadge status={complaint.status} />
-      </td>
-
-      <td className="px-4 py-3.5 text-sm text-gray-500">
-        {new Date(complaint.created_at).toLocaleString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </td>
-
-      <td className="px-4 py-3.5 text-right">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(complaint.id);
-          }}
-          className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 hover:text-blue-700"
-        >
-          Xem / Xử lý
-          <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      </td>
-    </tr>
+    <TableRow>
+      <TableCell>
+        <p className="font-medium text-slate-900">{complaint.issue_type_name}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{code}</p>
+        <time className="mt-0.5 block text-xs text-slate-500" dateTime={complaint.created_at}>
+          {formatComplaintDate(complaint.created_at)}
+        </time>
+      </TableCell>
+      <TableCell>
+        <p className="break-words font-medium text-slate-900">{complaint.booking_code || `#${complaint.booking}`}</p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          {complaint.schedule_sequence_no ? `Buổi ${complaint.schedule_sequence_no} · ` : ""}{complaint.stage_label}
+        </p>
+      </TableCell>
+      <TableCell className="break-words">
+        <p className="font-medium text-slate-900">{complaint.reporter_name || "—"}</p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          {complaint.reporter_role === "WORKER" ? "Nhân viên gửi" : "Khách hàng gửi"}
+        </p>
+        {complaint.reporter_role === "CUSTOMER" && (complaint.worker_name || complaint.worker) && (
+          <p className="mt-1 text-xs text-slate-500">NV: {complaint.worker_name || `#${complaint.worker}`}</p>
+        )}
+      </TableCell>
+      <TableCell>
+        <ComplaintStatusBadge status={complaint.status} workflowStatus={complaint.workflow_status} />
+      </TableCell>
+      <TableCell className="text-right">
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/complaints/${complaint.id}`} aria-label={`Xem hồ sơ ${code}`}>
+            Chi tiết <ChevronRight className="size-4" aria-hidden />
+          </Link>
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }

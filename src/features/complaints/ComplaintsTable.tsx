@@ -1,76 +1,60 @@
-// ComplaintsTable.tsx
+import { ClipboardList } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Complaint } from "@/types/Complaint";
 import { ComplaintRow } from "./ComplaintRow";
 
 interface ComplaintsTableProps {
   complaints: Complaint[];
-  onSelect: (id: number) => void;
+  loading: boolean;
+  failed: boolean;
+  onRetry: () => void;
 }
 
-const TH =
-  "px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500";
-
-export function ComplaintsTable({
-  complaints,
-  onSelect,
-}: ComplaintsTableProps) {
-  if (complaints.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
-          <svg
-            className="h-6 w-6 text-gray-300"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-gray-500">
-          Không có khiếu nại nào
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          Thử thay đổi bộ lọc để xem thêm kết quả.
-        </p>
-      </div>
-    );
-  }
-
+export function ComplaintsTable({ complaints, loading, failed, onRetry }: ComplaintsTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/60">
-              <th className={TH}>Mã</th>
-              <th className={TH}>Booking</th>
-              <th className={TH}>Người gửi</th>
-              <th className={TH}>Nhân viên liên quan</th>
-              <th className={TH}>Lý do</th>
-              <th className={TH}>Giai đoạn</th>
-              <th className={TH}>Trạng thái</th>
-              <th className={TH}>Ngày tạo</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-
-          <tbody>
-            {complaints.map((complaint) => (
-              <ComplaintRow
-                key={complaint.id}
-                complaint={complaint}
-                onSelect={onSelect}
-              />
+    <Card className="overflow-hidden">
+      {!loading && (failed || !complaints.length) ? (
+        <div className="py-16 text-center">
+          {failed ? (
+            <>
+              <p className="text-sm font-medium text-red-600">Không tải được danh sách khiếu nại.</p>
+              <Button variant="outline" className="mt-3" onClick={onRetry}>Thử lại</Button>
+            </>
+          ) : (
+            <>
+              <ClipboardList className="mx-auto h-8 w-8 text-slate-300" aria-hidden />
+              <p className="mt-3 text-sm font-medium text-slate-600">Không có khiếu nại phù hợp</p>
+              <p className="mt-1 text-xs text-slate-400">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+            </>
+          )}
+        </div>
+      ) : (
+        <Table className="min-w-[760px] table-fixed" aria-label="Danh sách khiếu nại" aria-busy={loading}>
+          <TableHeader className="border-b border-slate-200 bg-slate-50/80">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[25%]">Hồ sơ</TableHead>
+              <TableHead className="w-[18%]">Đơn / buổi</TableHead>
+              <TableHead className="w-[23%]">Người liên quan</TableHead>
+              <TableHead className="w-[19%]">Trạng thái</TableHead>
+              <TableHead className="w-[15%] text-right">Thao tác</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? Array.from({ length: 4 }, (_, index) => (
+              <TableRow key={index} className="hover:bg-transparent">
+                {Array.from({ length: 5 }, (_, column) => (
+                  <TableCell key={column}><Skeleton className="h-8 w-3/4" /></TableCell>
+                ))}
+              </TableRow>
+            )) : complaints.map((complaint) => (
+              <ComplaintRow key={complaint.id} complaint={complaint} />
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      )}
+    </Card>
   );
 }

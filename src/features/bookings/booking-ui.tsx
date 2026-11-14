@@ -28,4 +28,3 @@ export function PaymentBadge({ status, label }: { status: PaymentStatus; label: 
 }
 
 export function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) { return <label className="space-y-1.5 text-sm font-medium text-slate-700"><span>{label}{required && <span className="text-red-500"> *</span>}</span>{children}</label>; }
-export const selectClass = "h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";

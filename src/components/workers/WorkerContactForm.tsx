@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -91,7 +92,7 @@ export default function WorkerContactForm({
         </div>
         {error && <p role="alert" className="whitespace-pre-line text-sm text-red-700">{error}</p>}
         <label className="flex items-center gap-2 text-sm text-slate-800">
-          <input type="checkbox" checked={confirmed} disabled={isLoading} onChange={event => setConfirmed(event.target.checked)} />
+          <Checkbox checked={confirmed} disabled={isLoading} onCheckedChange={(checked) => setConfirmed(checked === true)} />
           Tôi đã xác nhận số điện thoại mới với nhân viên.
         </label>
         <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">

@@ -1,4 +1,6 @@
 "use client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { SelectField } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronRight, Heart, Loader2, MapPin, Search, Send, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -8,14 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useWithdrawInvitationMutation, useBulkAssignMutation, useCancelAdminBookingMutation, useCompleteScheduleMutation, useGetAvailableWorkersQuery, useUnassignWorkerMutation, useUpdateAdminBookingMutation, useUpdateAdminScheduleMutation } from "@/services/bookingApi";
 import type { AvailableWorker, BookingDetail, Schedule } from "@/types/Booking";
-import { apiError, dateTime, Field, selectClass } from "./booking-ui";
+import { apiError, dateTime, Field } from "./booking-ui";
 import { WorkerProfilePanel } from "./WorkerProfilePanel";
 
 export function EditBookingDialog({ booking }: { booking: BookingDetail }) {
   const [open, setOpen] = useState(false); const [note, setNote] = useState(booking.note ?? ""); const [addressId, setAddressId] = useState(booking.address.id); const [deliveryId, setDeliveryId] = useState<number | undefined>(booking.delivery_address?.id); const [update, { isLoading }] = useUpdateAdminBookingMutation();
   const submit = async (e: React.FormEvent) => { e.preventDefault(); try { await update({ id: booking.id, data: { note, address_id: addressId, delivery_address_id: deliveryId ?? null } }).unwrap(); toast.success("Đã cập nhật đơn."); setOpen(false); } catch (error) { toast.error(apiError(error), { duration: 10000 }); } };
   const addresses = [booking.address, ...(booking.delivery_address && booking.delivery_address.id !== booking.address.id ? [booking.delivery_address] : [])];
-  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button variant="outline">Sửa thông tin</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Cập nhật đơn</DialogTitle><DialogDescription>Chỉ cập nhật ghi chú và các địa chỉ an toàn của khách hàng.</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-4"><Field label="Địa chỉ thực hiện"><select className={selectClass} value={addressId} onChange={(e) => setAddressId(Number(e.target.value))}>{addresses.map((a) => <option key={a.id} value={a.id}>{a.label} — {a.address_line}</option>)}</select></Field><Field label="Địa chỉ giao nhận"><select className={selectClass} value={deliveryId ?? ""} onChange={(e) => setDeliveryId(Number(e.target.value) || undefined)}><option value="">Không có</option>{addresses.map((a) => <option key={a.id} value={a.id}>{a.label} — {a.address_line}</option>)}</select></Field><Field label="Ghi chú"><Textarea value={note} onChange={(e) => setNote(e.target.value)} /></Field><DialogFooter><Button variant="outline" type="button" onClick={() => setOpen(false)}>Đóng</Button><Button disabled={isLoading}>{isLoading && <Loader2 className="h-4 w-4 animate-spin" />}Lưu</Button></DialogFooter></form></DialogContent></Dialog>;
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button variant="outline">Sửa thông tin</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Cập nhật đơn</DialogTitle><DialogDescription>Chỉ cập nhật ghi chú và các địa chỉ an toàn của khách hàng.</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-4"><Field label="Địa chỉ thực hiện"><SelectField label="Địa chỉ thực hiện" value={String(addressId ?? "")} onValueChange={(value) => setAddressId(Number(value))} options={addresses.map((a) => ({ value: String(a.id), label: a.label + " — " + a.address_line }))} /></Field><Field label="Địa chỉ giao nhận"><SelectField label="Địa chỉ giao nhận" value={String(deliveryId ?? "none")} onValueChange={(value) => setDeliveryId(value === "none" ? undefined : Number(value))} options={[{ value: "none", label: "Không có" }, ...addresses.map((a) => ({ value: String(a.id), label: a.label + " — " + a.address_line }))]} /></Field><Field label="Ghi chú"><Textarea value={note} onChange={(e) => setNote(e.target.value)} /></Field><DialogFooter><Button variant="outline" type="button" onClick={() => setOpen(false)}>Đóng</Button><Button disabled={isLoading}>{isLoading && <Loader2 className="h-4 w-4 animate-spin" />}Lưu</Button></DialogFooter></form></DialogContent></Dialog>;
 }
 
 export function CancelBookingDialog({ booking }: { booking: BookingDetail }) {
@@ -113,8 +115,8 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
             <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><Input aria-label="Tìm nhân viên" className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc số điện thoại" /></div>
             <div className="my-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
               <span>{filteredWorkers.length} nhân viên {groupLabel}</span>
-              <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-blue-600" disabled={isFetching || !selectableWorkers.length} checked={!!selectableWorkers.length && selectableWorkers.every((worker) => selectedWorkers.some((item) => item.id === worker.id))} onChange={(e) => {
-                const checked = e.target.checked;
+              <label className="flex cursor-pointer items-center gap-2"><Checkbox disabled={isFetching || !selectableWorkers.length} checked={!!selectableWorkers.length && selectableWorkers.every((worker) => selectedWorkers.some((item) => item.id === worker.id))} onCheckedChange={(value) => {
+                const checked = value === true;
                 setSelectedWorkers((current) => checked ? [...current, ...selectableWorkers.filter((worker) => !current.some((item) => item.id === worker.id))].slice(0, 100) : current.filter((item) => !selectableWorkers.some((worker) => worker.id === item.id)));
               }} />Chọn tất cả trên trang</label>
             </div>
@@ -134,7 +136,7 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
             {selectedWorkers.length > 0 && <button type="button" className="text-blue-600 hover:underline" onClick={() => setSelectedWorkers([])}>Bỏ chọn tất cả</button>}
           </div>
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <Field label="Thời hạn phản hồi"><select className={`${selectClass} min-w-32`} value={responseMinutes} onChange={(e) => setResponseMinutes(Number(e.target.value))}><option value={15}>15 phút</option><option value={30}>30 phút</option><option value={60}>60 phút</option></select></Field>
+            <Field label="Thời hạn phản hồi"><SelectField label="Thời hạn phản hồi" className="min-w-32" value={String(responseMinutes)} onValueChange={(value) => setResponseMinutes(Number(value))} options={[15, 30, 60].map((minutes) => ({ value: String(minutes), label: minutes + " phút" }))} /></Field>
             <Button disabled={!selectedWorkers.length || bulkLoading}>{bulkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Gửi lời mời nhận việc{selectedWorkers.length > 0 && ` (${selectedWorkers.length})`}</Button>
           </div>
           <p className="mt-2 text-xs text-slate-500">Người xác nhận đầu tiên nhận việc.</p>
@@ -148,7 +150,7 @@ function InvitationWorkerCard({ worker, selected, selectionDisabled, onSelect, o
   const initials = worker.full_name.split(" ").filter(Boolean).slice(-2).map((part) => part[0]).join("").toUpperCase();
   return <article className={`relative overflow-hidden rounded-xl border transition-colors ${selected ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 bg-white hover:border-blue-300"}`}>
     <button type="button" className="absolute inset-0 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 disabled:cursor-not-allowed" aria-label={`Chọn thẻ nhân viên ${worker.full_name}`} aria-pressed={selected} disabled={selectionDisabled} onClick={onSelect} />
-    <label className="absolute right-3 top-3 z-10 flex cursor-pointer rounded p-1"><span className="sr-only">Chọn {worker.full_name}</span><input type="checkbox" checked={selected} disabled={selectionDisabled} onChange={onSelect} className="h-4 w-4 accent-blue-600" /></label>
+    <label className="absolute right-3 top-3 z-10 flex cursor-pointer rounded p-1"><span className="sr-only">Chọn {worker.full_name}</span><Checkbox checked={selected} disabled={selectionDisabled} onCheckedChange={onSelect} /></label>
     <div className="pointer-events-none p-4">
       <div className="flex min-h-12 items-center gap-3 pr-6">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-100 text-sm font-semibold text-blue-700">{initials || "NV"}</span>

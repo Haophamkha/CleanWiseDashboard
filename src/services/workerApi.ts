@@ -28,6 +28,15 @@ type WorkerReviewPage = {
 
 export const workerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getWorkerProfileByUser: builder.query<WorkerProfile | null, number>({
+      query: (userId) => ({
+        url: "/api/auth/admin/worker-profiles/",
+        method: "GET",
+        params: { user_id: userId },
+      }),
+      transformResponse: (response: unknown) => unwrap<WorkerProfile[]>(response)[0] ?? null,
+      providesTags: ["Workers"],
+    }),
     getWorkerSchedule: builder.query<WorkerSchedule, { workerId: number; start: string; end: string }>({
       query: ({ workerId, start, end }) => ({ url: `/api/admin/workers/${workerId}/schedule/`, method: "GET", params: { start, end } }),
       transformResponse: unwrap,
@@ -153,6 +162,7 @@ export const workerApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetWorkerProfileByUserQuery,
   useGetWorkerScheduleQuery,
   useGetWorkerProfilesQuery,
   useGetWorkerReviewHistoryInfiniteQuery,

@@ -1,5 +1,7 @@
 "use client";
 
+import { SelectField } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useGetWorkerReviewsQuery,
   useReplyToReviewMutation,
@@ -174,38 +176,9 @@ export default function WorkerReviewsPanel({ worker }: WorkerReviewsPanelProps) 
             </div>
           </div>
 
-          <select
-            value={rating}
-            onChange={(event) =>
-              setRating(
-                event.target.value === "ALL"
-                  ? "ALL"
-                  : Number(event.target.value),
-              )
-            }
-            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            aria-label="Lọc theo số sao"
-          >
-            <option value="ALL">Tất cả số sao</option>
-            {[5, 4, 3, 2, 1].map((value) => (
-              <option key={value} value={value}>
-                {value} sao
-              </option>
-            ))}
-          </select>
+          <SelectField label="Lọc theo số sao" className="w-full sm:w-44" value={String(rating)} onValueChange={(value) => setRating(value === "ALL" ? "ALL" : Number(value))} options={[{ value: "ALL", label: "Tất cả số sao" }, ...[5, 4, 3, 2, 1].map((stars) => ({ value: String(stars), label: stars + " sao" }))]} />
 
-          <select
-            value={visibility}
-            onChange={(event) =>
-              setVisibility(event.target.value as VisibilityFilter)
-            }
-            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            aria-label="Lọc trạng thái hiển thị"
-          >
-            <option value="ALL">Mọi trạng thái</option>
-            <option value="VISIBLE">Đang hiển thị</option>
-            <option value="HIDDEN">Đã ẩn</option>
-          </select>
+          <SelectField label="Lọc trạng thái hiển thị" className="w-full sm:w-44" value={visibility} onValueChange={(value) => setVisibility(value as VisibilityFilter)} options={[{ value: "ALL", label: "Mọi trạng thái" }, { value: "VISIBLE", label: "Đang hiển thị" }, { value: "HIDDEN", label: "Đã ẩn" }]} />
         </div>
 
         {feedback && (
@@ -329,13 +302,12 @@ export default function WorkerReviewsPanel({ worker }: WorkerReviewsPanelProps) 
 
               {replyingId === review.id && (
                 <div className="mt-3">
-                  <textarea
+                  <Textarea aria-label="Phản hồi đánh giá"
                     value={replyText}
                     onChange={(event) => setReplyText(event.target.value)}
                     maxLength={3000}
                     rows={3}
                     placeholder="Nhập phản hồi gửi tới khách hàng..."
-                    className="w-full resize-y rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   <div className="mt-2 flex justify-end gap-2">
                     <button

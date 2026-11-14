@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,6 @@ import {
   useGetDisciplineDetailQuery,
 } from "@/services/disciplineApi";
 import type { DisciplineAction, DisciplineCase } from "@/types/Discipline";
-import { ComplaintResolveModal } from "./ComplaintResolveModal";
 
 const actionLabels: Record<DisciplineAction, string> = {
   CONFIRM: "Xác nhận trừ điểm",
@@ -35,7 +35,6 @@ function DecisionPanel({ id }: { id: number }) {
   const [decide, { isLoading }] = useDecideDisciplineMutation();
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
-  const [appeal, setAppeal] = useState<number | null>(null);
   const [confirmBan, setConfirmBan] = useState(false);
 
   if (isError) return <p role="alert">Không tải được hồ sơ vi phạm.</p>;
@@ -80,7 +79,7 @@ function DecisionPanel({ id }: { id: number }) {
       {item.summary.enforced && item.summary.restricted_until && <p className="text-sm text-red-700">Tạm dừng nhận việc đến {formatTime(item.summary.restricted_until)}</p>}
       {item.sanction && <p className="text-sm text-red-700">{item.sanction_label} · {item.sanction_note}</p>}
       {item.sanction === "PROPOSED" && !item.can_decide_proposal && <p className="text-sm text-amber-800">Một quản trị viên khác cần duyệt đề xuất.</p>}
-      {item.appeal_id !== null && <Button type="button" variant="outline" onClick={() => setAppeal(item.appeal_id)}>Xem khiếu nại và ảnh minh chứng</Button>}
+      {item.appeal_id !== null && <Button asChild variant="outline"><Link href={`/complaints/${item.appeal_id}?from=discipline`}>Xem khiếu nại và ảnh minh chứng</Link></Button>}
       {actions.length > 0 && (
         <>
           <label className="block text-sm font-medium text-gray-800">
@@ -123,7 +122,6 @@ function DecisionPanel({ id }: { id: number }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {appeal !== null && <ComplaintResolveModal complaintId={appeal} onClose={() => setAppeal(null)} />}
     </Card>
   );
 }

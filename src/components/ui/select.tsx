@@ -9,6 +9,28 @@ export const Select = SelectPrimitive.Root;
 export const SelectGroup = SelectPrimitive.Group;
 export const SelectValue = SelectPrimitive.Value;
 
+export function SelectField({ label, value, onValueChange, options, placeholder, required, disabled, className }: {
+  label: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onValueChange} required={required} disabled={disabled}>
+      <SelectTrigger className={className} aria-label={label}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
