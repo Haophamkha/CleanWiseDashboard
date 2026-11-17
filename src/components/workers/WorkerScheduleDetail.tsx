@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, MapPin, UserRound, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { BookingDetailLink } from "@/features/bookings/BookingDetailLink";
 import type { WorkerScheduleItem } from "@/types/WorkerSchedule";
 
 const dateLabel = (value: string) => new Date(value).toLocaleString("vi-VN", {
@@ -26,11 +26,9 @@ export default function WorkerScheduleDetail({ item, onBack }: {
       }}
     >
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <Button autoFocus variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4" />Quay lại lịch
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <Link href={`/bookings/${item.booking_id}`}>Mở đơn {item.booking_code}</Link>
+        <BookingDetailLink bookingId={item.booking_id}>Mở đơn {item.booking_code}</BookingDetailLink>
+        <Button autoFocus variant="ghost" size="icon" aria-label="Đóng chi tiết buổi làm" onClick={onBack}>
+          <X className="size-4" aria-hidden />
         </Button>
       </div>
 

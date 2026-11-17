@@ -32,12 +32,14 @@ const dateLabel = (value?: string | null) =>
 
 export function CustomerDetailModal({
   id,
+  initialTab = "profile",
   onClose,
 }: {
   id: number;
+  initialTab?: "profile" | "contact";
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState("profile");
+  const [tab, setTab] = useState<string>(initialTab);
   const {
     data: customer,
     isLoading,
@@ -71,7 +73,7 @@ export function CustomerDetailModal({
             <TabsList className="h-auto flex-wrap">
               <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
               <TabsTrigger value="wallet">Ví</TabsTrigger>
-              {customer && <TabsTrigger value="contact">Nhắn tin liên hệ</TabsTrigger>}
+              {(customer || initialTab === "contact") && <TabsTrigger value="contact">Nhắn tin liên hệ</TabsTrigger>}
             </TabsList>
           </div>
           <TabsContent
@@ -185,6 +187,13 @@ export function CustomerDetailModal({
             {tab === "wallet" && <UserWalletPanel userId={id} />}
           </TabsContent>
           <TabsContent value="contact" className="mt-0 min-h-0 flex-1 overflow-hidden p-3 sm:px-6 sm:py-4">
+            {isLoading && <Skeleton className="h-20 w-full" />}
+            {isError && (
+              <div className="space-y-2 p-3 text-sm" role="alert">
+                <p className="text-red-600">Không tải được thông tin khách hàng.</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()}>Thử lại</Button>
+              </div>
+            )}
             {customer && tab === "contact" && <SupportChatPanel key={id} userId={id} name={name} role="customer" />}
           </TabsContent>
           <div className="flex shrink-0 justify-end border-t border-slate-200 bg-slate-50/70 px-6 py-4">

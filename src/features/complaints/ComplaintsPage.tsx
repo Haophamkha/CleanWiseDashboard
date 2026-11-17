@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetComplaintsQuery } from "@/services/complaintApi";
 import { useDebounced } from "@/features/refunds/refund-utils";
@@ -13,8 +14,18 @@ import type {
 } from "@/types/Complaint";
 
 export function ComplaintsPage({ initialTab }: { initialTab: "complaints" | "discipline" }) {
+  const searchParams = useSearchParams();
+  const tab = searchParams ? (searchParams.get("tab") === "discipline" ? "discipline" : "complaints") : initialTab;
+
+  function selectTab(value: string) {
+    const url = new URL(window.location.href);
+    if (value === "discipline") url.searchParams.set("tab", value);
+    else url.searchParams.delete("tab");
+    window.history.replaceState(null, "", url);
+  }
+
   return (
-    <Tabs defaultValue={initialTab} className="space-y-5">
+    <Tabs value={tab} onValueChange={selectTab} className="space-y-5">
       <header>
         <h1 className="text-2xl font-bold text-slate-950">Khiếu nại</h1>
         <p className="mt-1 text-sm text-slate-500">Tiếp nhận phản ánh, theo dõi phương án và kết quả xử lý.</p>

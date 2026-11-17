@@ -77,6 +77,30 @@ export interface ComplaintDetail extends Complaint {
   assigned_to_name?: string | null;
   can_manage_workflow?: boolean;
   next_update_at?: string | null;
+  worker_statement?: {
+    id: number;
+    status: "OPEN" | "SUBMITTED" | "EXPIRED" | "CLOSED";
+    request_message: string;
+    due_at: string;
+    response: string;
+    submitted_at: string | null;
+    attachments: { id: number; file: string }[];
+  } | null;
+  redo_earnings?: {
+    expected: string;
+    recovered: string;
+    shortfall: string;
+    paid: string;
+    platform_cost: string;
+    recoverable: string | null;
+    recovery_shortfall: string | null;
+  } | null;
+  supplement?: {
+    request_id: number;
+    message: string;
+    status: "PENDING" | "SUBMITTED" | "CLOSED";
+    submitted_at: string | null;
+  } | null;
   requested_resolution_label?: string;
   scheduled_start?: string | null;
   actual_start?: string | null;
@@ -103,11 +127,13 @@ export interface ComplaintDetail extends Complaint {
 
 export interface ComplaintWorkflowRequest {
   id: number;
-  action: "CLAIM" | "ACK" | "REQUEST" | "VERIFY" | "OFFER" | "SCHEDULE_REDO" | "COMPLETE" | "REJECT";
+  action: "CLAIM" | "ACK" | "REQUEST" | "REQUEST_WORKER" | "VERIFY" | "OFFER" | "SCHEDULE_REDO" | "COMPLETE" | "REJECT";
   message?: string;
   basis?: string;
   reopen_instructions?: string;
   next_update_at?: string;
+  worker_due_at?: string;
+  recovery_basis?: string;
   proposal_id?: number;
   service_action?: "REDO" | "CHANGE";
   scheduled_start?: string;

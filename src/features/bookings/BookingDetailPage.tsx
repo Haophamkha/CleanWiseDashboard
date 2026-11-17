@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowLeft,
   CalendarDays,
   CircleDollarSign,
   Clock3,
@@ -36,16 +34,16 @@ import {
 } from "./BookingActions";
 import { useGetServiceDetailQuery } from "@/services/servicesApi";
 import type { ServiceFormSchema } from "@/types/Service";
-import { serviceFieldLabel, serviceFieldValue } from "./service-data-display";
+import { serviceDataEntries, serviceFieldLabel, serviceFieldValue } from "./service-data-display";
 import { dateTime, money, StatusBadge } from "./booking-ui";
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
         {label}
       </dt>
-      <dd className="mt-1 text-sm text-slate-800">{value || "—"}</dd>
+      <dd className="mt-1 break-words text-sm text-slate-800">{value || "—"}</dd>
     </div>
   );
 }
@@ -55,6 +53,7 @@ export function BookingDetailPage({ id }: { id: number }) {
     data: booking,
     isLoading,
     isError,
+    refetch,
   } = useGetAdminBookingDetailQuery(id, {
     pollingInterval: 15000,
     refetchOnFocus: true,
@@ -90,9 +89,7 @@ export function BookingDetailPage({ id }: { id: number }) {
           <p className="text-slate-600">
             Không tải được đơn hoặc đơn không tồn tại.
           </p>
-          <Button asChild className="mt-4">
-            <Link href="/bookings">Quay lại danh sách</Link>
-          </Button>
+          <Button variant="outline" className="mt-4" onClick={() => void refetch()}>Thử lại</Button>
         </CardContent>
       </Card>
     );
@@ -105,23 +102,19 @@ export function BookingDetailPage({ id }: { id: number }) {
   );
   const firstSelected = booking.schedules.find((s) => s.id === selected[0]);
   const refunded = Number(booking.refunded_amount ?? 0);
+  const isRedo = typeof booking.price_breakdown?.complaint_code === "string";
+  const serviceEntries = serviceDataEntries(booking.service_data);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link
-            href="/bookings"
-            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-blue-600"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Danh sách đơn
-          </Link>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="whitespace-nowrap text-2xl font-bold text-slate-900">
               {booking.booking_code}
             </h1>
             <StatusBadge status={booking.status} label={booking.status_label} />
+            {isRedo && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">Làm lại miễn phí · 0đ</span>}
             <StatusBadge
               status={booking.payment_status}
               label={booking.payment_status_label}
@@ -221,13 +214,9 @@ export function BookingDetailPage({ id }: { id: number }) {
           <CardTitle>Dịch vụ: {booking.service.name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Info label="Ghi chú đơn" value={booking.note} />
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              Dữ liệu dịch vụ
-            </p>
-            <div className="grid gap-3 rounded-lg bg-slate-50 p-4 sm:grid-cols-2">
-              {Object.entries(booking.service_data).map(([key, value]) => (
+          {serviceEntries.length > 0 ? (
+            <dl className="grid gap-x-6 gap-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {serviceEntries.map(([key, value]) => (
                 <Info
                   key={key}
                   label={serviceFieldLabel(key, serviceFields)}
@@ -239,13 +228,11 @@ export function BookingDetailPage({ id }: { id: number }) {
                   )}
                 />
               ))}
-              {!Object.keys(booking.service_data).length && (
-                <p className="text-sm text-slate-500">
-                  Không có dữ liệu bổ sung.
-                </p>
-              )}
-            </div>
-          </div>
+            </dl>
+          ) : <p className="text-sm text-slate-500">Không có dữ liệu bổ sung.</p>}
+          <dl className="border-t border-slate-200 pt-4">
+            <Info label="Ghi chú đơn" value={booking.note} />
+          </dl>
         </CardContent>
       </Card>
       <Card>

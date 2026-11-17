@@ -1,12 +1,23 @@
 import type { FormField } from "@/types/Service";
 
-const LABELS: Record<string, string> = {
-  date: "Ngày thực hiện", note: "Ghi chú", duration: "Thời lượng", start_time: "Giờ bắt đầu", additional_services: "Dịch vụ bổ sung",
+const SCHEDULE_LABELS: Record<string, string> = {
+  date: "Ngày thực hiện",
+  start_time: "Giờ bắt đầu",
+  duration: "Thời lượng làm việc",
 };
+const LABELS: Record<string, string> = { note: "Ghi chú", additional_services: "Dịch vụ bổ sung" };
 const VALUES: Record<string, string> = { COOKING: "Nấu ăn", WINDOW_CLEANING: "Lau cửa sổ", IRONING: "Ủi đồ" };
 
 export function serviceFieldLabel(key: string, fields: FormField[] = []): string {
-  return fields.find(field => field.key === key)?.label || LABELS[key] || key.replaceAll("_", " ");
+  return SCHEDULE_LABELS[key] || fields.find(field => field.key === key)?.label || LABELS[key] || key.replaceAll("_", " ");
+}
+
+export function serviceDataEntries(data: Record<string, unknown>) {
+  const scheduleKeys = Object.keys(SCHEDULE_LABELS);
+  return [
+    ...scheduleKeys.filter(key => Object.hasOwn(data, key)).map(key => [key, data[key]] as const),
+    ...Object.entries(data).filter(([key]) => !scheduleKeys.includes(key)),
+  ];
 }
 
 export function serviceFieldValue(key: string, value: unknown, fields: FormField[] = [], data: Record<string, unknown> = {}): string {
