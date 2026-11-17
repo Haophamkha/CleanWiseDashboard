@@ -79,7 +79,7 @@ function DecisionPanel({ id }: { id: number }) {
       {item.summary.enforced && item.summary.restricted_until && <p className="text-sm text-red-700">Tạm dừng nhận việc đến {formatTime(item.summary.restricted_until)}</p>}
       {item.sanction && <p className="text-sm text-red-700">{item.sanction_label} · {item.sanction_note}</p>}
       {item.sanction === "PROPOSED" && !item.can_decide_proposal && <p className="text-sm text-amber-800">Một quản trị viên khác cần duyệt đề xuất.</p>}
-      {item.appeal_id !== null && <Button asChild variant="outline"><Link href={`/complaints/${item.appeal_id}?from=discipline`}>Xem khiếu nại và ảnh minh chứng</Link></Button>}
+      {item.appeal_id !== null && <Button asChild variant="outline"><Link href={`/complaints/${item.appeal_id}`}>Xem khiếu nại và ảnh minh chứng</Link></Button>}
       {actions.length > 0 && (
         <>
           <label className="block text-sm font-medium text-gray-800">

@@ -3,7 +3,7 @@ import { SelectField } from "@/components/ui/select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertCircle, ArrowLeft, ArrowUpRight, Download, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +53,6 @@ export default function ReportsDashboard({ module = "overview", month }: { modul
       <div><h1 className="text-2xl font-semibold tracking-tight text-slate-950">{title}</h1><p className="mt-1 text-xs text-slate-500">{module === "overview" ? "Các chỉ số chính và những việc cần chú ý trong kỳ." : "Báo cáo chuyên sâu · Cùng kỳ thống kê với trang Tổng quan."}</p></div>
       <div className="flex flex-wrap items-end gap-2">
         <label className="space-y-1 text-xs text-slate-500"><span>Kỳ thống kê · Giờ Việt Nam</span><Input type="month" min="2000-01" max="2100-12" value={month} aria-label="Kỳ thống kê" onChange={event => { if (/^(20\d{2}|2100)-(0[1-9]|1[0-2])$/.test(event.target.value)) router.replace(reportHref(module, event.target.value)); }} className="h-9 w-44" /></label>
-        {module !== "overview" && <Button asChild variant="outline" size="sm"><Link href={href("overview")}><ArrowLeft className="h-4 w-4" />Tổng quan</Link></Button>}
         <Button variant="outline" size="icon" aria-label="Làm mới báo cáo" onClick={refresh} disabled={isFetching}><RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} /></Button>
         {needsOverview && <Button size="sm" variant="outline" onClick={exportFile} disabled={exporting || !data || isError}><Download className="h-4 w-4" />{exporting ? "Đang xuất…" : "Xuất Excel"}</Button>}
       </div>

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
+import { Bell, ChevronLeft, ChevronRight, ClipboardList, MessageCircle } from "lucide-react";
+import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { apiError } from "@/lib/api-error";
 import { ENV } from "@/config/env";
-import { getAccessToken } from "@/utils/authCookies";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { getAccessToken, getRefreshToken } from "@/utils/authCookies";
+import { useAppDispatch } from "@/store/hooks";
 import { baseApi } from "@/store/baseApi";
+import { CustomerDetailModal } from "@/features/customers/CustomerDetailModal";
 import {
   notificationApi,
   useGetAdminNotificationSummaryQuery,
@@ -24,12 +25,15 @@ import {
   type AdminNotification,
 } from "@/services/notificationApi";
 
+const notificationToaster = "dashboard-notifications";
+const notificationIcons = { support_chat: MessageCircle, complaint: ClipboardList };
+
 export default function AdminNotifications() {
   const dispatch = useAppDispatch();
-  const userId = useAppSelector((state) => state.auth.user?.id);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [chatCustomerId, setChatCustomerId] = useState<number | null>(null);
   const { data: summary } = useGetAdminNotificationSummaryQuery(undefined, {
     pollingInterval: 30000,
   });
@@ -41,7 +45,7 @@ export default function AdminNotifications() {
     useMarkAllNotificationsReadMutation();
 
   useEffect(() => {
-    if (!userId) return;
+    if (!getAccessToken() && !getRefreshToken()) return;
     let stopped = false;
     let socket: WebSocket | undefined;
     let timer: ReturnType<typeof setTimeout>;
@@ -53,7 +57,15 @@ export default function AdminNotifications() {
           workers ? ["Notifications", "Workers"] : ["Notifications"],
         ),
       );
-    const connect = () => {
+    const connect = async () => {
+      if (stopped) return;
+      if (!getAccessToken() && getRefreshToken()) {
+        // A restored Dashboard session can refresh its token before opening the socket.
+        await dispatch(notificationApi.endpoints.getAdminNotificationSummary.initiate(
+          undefined,
+          { forceRefetch: true, subscribe: false },
+        ));
+      }
       const token = getAccessToken();
       if (stopped || !token) return;
       const url = new URL(ENV.API_URL, window.location.origin);
@@ -80,8 +92,35 @@ export default function AdminNotifications() {
               "Notifications", { type: "Complaints", id: "LIST" },
               ...(typeof id === "number" ? [{ type: "Complaints" as const, id }] : ["Complaints" as const]),
             ]));
+          } else if (message.type === "notification.unread") {
+            const count = message.unread_count;
+            if (typeof count === "number" && Number.isInteger(count) && count >= 0) {
+              dispatch(notificationApi.util.updateQueryData("getAdminNotificationSummary", undefined, (draft) => {
+                draft.unread_count = count;
+              }));
+            }
+            const incoming = message.notification;
+            if (typeof incoming?.id === "number" && typeof incoming.title === "string" && incoming.title.trim()) {
+              const Icon = incoming.target === "support_chat" || incoming.target === "complaint"
+                ? notificationIcons[incoming.target as keyof typeof notificationIcons]
+                : Bell;
+              toast(incoming.title, {
+                id: `admin-notification-${incoming.id}`,
+                toasterId: notificationToaster,
+                className: "dashboard-notification-toast",
+                duration: 5000,
+                icon: <Icon className="size-4 text-blue-600" aria-hidden />,
+                action: {
+                  label: "Xem",
+                  onClick: () => {
+                    setPage(1);
+                    setOpen(true);
+                  },
+                },
+              });
+            }
+            refresh();
           }
-          else if (message.type === "notification.unread") refresh();
         } catch {
           /* Ignore malformed realtime messages; HTTP remains authoritative. */
         }
@@ -98,7 +137,7 @@ export default function AdminNotifications() {
                 { forceRefetch: true, subscribe: false },
               ),
             );
-            connect();
+            void connect();
           },
           Math.min(30000, 1000 * 2 ** attempts++) + Math.random() * 500,
         );
@@ -106,7 +145,7 @@ export default function AdminNotifications() {
     };
     const onFocus = () => refresh(true);
     window.addEventListener("focus", onFocus);
-    connect();
+    void connect();
     return () => {
       stopped = true;
       clearTimeout(timer);
@@ -114,7 +153,7 @@ export default function AdminNotifications() {
       socket?.close();
       window.removeEventListener("focus", onFocus);
     };
-  }, [dispatch, userId]);
+  }, [dispatch]);
 
   const select = async (notification: AdminNotification) => {
     if (!notification.is_read) {
@@ -127,7 +166,11 @@ export default function AdminNotifications() {
 
     setOpen(false);
 
-    if (notification.related_worker) {
+    if (notification.target === "support_chat" && notification.related_customer) {
+      setChatCustomerId(notification.related_customer);
+    } else if (notification.target === "complaint" && notification.related_complaint) {
+      router.push(`/complaints/${notification.related_complaint}`);
+    } else if (notification.related_worker) {
       router.push(`/workers?worker=${notification.related_worker}`);
     } else if (notification.related_booking) {
       router.push(`/bookings/${notification.related_booking}`);
@@ -136,6 +179,15 @@ export default function AdminNotifications() {
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
+      <Toaster
+        id={notificationToaster}
+        position="top-right"
+        offset={{ top: 76, right: 24 }}
+        mobileOffset={{ top: 76, right: 12, left: 12 }}
+        visibleToasts={2}
+        hotkey={[]}
+        customAriaLabel="Thông báo mới"
+      />
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -201,15 +253,21 @@ export default function AdminNotifications() {
                   onClick={() => select(notification)}
                   className={`block w-full border-b border-slate-100 p-4 text-left transition-colors hover:bg-blue-50 ${notification.is_read ? "bg-white" : "bg-blue-50/60"}`}
                 >
-                  <p className="text-sm font-medium">
+                  <p className="flex items-center gap-2 text-sm font-medium">
                     {!notification.is_read && (
-                      <span className="mr-2 inline-block h-2 w-2 rounded-full bg-blue-600" />
+                      <span className="size-2 shrink-0 rounded-full bg-blue-600" aria-hidden />
                     )}
-                    {notification.title}
+                    {notification.target === "support_chat" && (
+                      <MessageCircle className="size-4 shrink-0 text-blue-600" aria-hidden />
+                    )}
+                    {notification.target === "complaint" && (
+                      <ClipboardList className="size-4 shrink-0 text-blue-600" aria-hidden />
+                    )}
+                    <span className="min-w-0 break-words">{notification.title}</span>
                   </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {notification.message}
-                  </p>
+                  {notification.target !== "support_chat" && notification.message && (
+                    <p className="mt-1 break-words text-sm text-slate-600">{notification.message}</p>
+                  )}
                   <p className="mt-2 text-xs text-slate-400">
                     {new Date(notification.created_at).toLocaleString("vi-VN")}
                   </p>
@@ -240,6 +298,14 @@ export default function AdminNotifications() {
           </Button>
         </div>
       </DropdownMenuContent>
+      {chatCustomerId !== null && (
+        <CustomerDetailModal
+          key={chatCustomerId}
+          id={chatCustomerId}
+          initialTab="contact"
+          onClose={() => setChatCustomerId(null)}
+        />
+      )}
     </DropdownMenu>
   );
 }

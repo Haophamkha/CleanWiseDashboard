@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock3, CreditCard, UserRound, UsersRound } from "lucide-react";
+import { Clock3, CreditCard, UserRound, UsersRound } from "lucide-react";
+import { ComplaintOrderLink } from "./ComplaintOrderLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -124,7 +124,7 @@ const readApiError = (err: unknown, fallback: string): string => {
   );
 };
 
-export function ComplaintDetailPage({ complaintId, fromDiscipline }: { complaintId: number; fromDiscipline: boolean }) {
+export function ComplaintDetailPage({ complaintId }: { complaintId: number }) {
   const [profile, setProfile] = useState<{ role: "customer" | "worker"; id: number; name: string } | null>(null);
   const workerProfile = useGetWorkerProfileByUserQuery(profile?.id ?? 0, { skip: profile?.role !== "worker" });
   const {
@@ -227,18 +227,11 @@ export function ComplaintDetailPage({ complaintId, fromDiscipline }: { complaint
 
   return (
     <div className="space-y-5">
-      <header className="space-y-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href={fromDiscipline ? "/complaints?tab=discipline" : "/complaints"}>
-            <ArrowLeft className="size-4" aria-hidden /> Quay lại danh sách
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-950">Chi tiết khiếu nại</h1>
-          {detail && <p className="mt-1 text-sm text-slate-500">
-            {detail.code ?? `#${detail.id}`} · {detail.issue_type_name}
-          </p>}
-        </div>
+      <header>
+        <h1 className="text-2xl font-bold text-slate-950">Chi tiết khiếu nại</h1>
+        {detail && <p className="mt-1 text-sm text-slate-500">
+          {detail.code ?? `#${detail.id}`} · {detail.issue_type_name}
+        </p>}
       </header>
       {isLoading && <Skeleton className="h-32 w-full rounded-lg" />}
       {isError && (
@@ -257,6 +250,10 @@ export function ComplaintDetailPage({ complaintId, fromDiscipline }: { complaint
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <ComplaintOrderLink bookingId={detail.booking} code={detail.booking_code} subtitle={[
+                detail.schedule_sequence_no && `Buổi ${detail.schedule_sequence_no}`,
+                detail.scheduled_start && `Dự kiến ${formatComplaintDate(detail.scheduled_start)}`,
+              ].filter(Boolean).join(" · ")} />
               <div className="grid gap-2 sm:grid-cols-2">
                 {isWorkerReporter && <ProfileInfoCard icon={UserRound} label="Nhân viên gửi"
                   value={detail.reporter_name || `#${detail.reporter}`}
@@ -271,16 +268,10 @@ export function ComplaintDetailPage({ complaintId, fromDiscipline }: { complaint
                     value={detail.worker_name || (relatedWorkerId ? `#${relatedWorkerId}` : "Chưa xác định")}
                     onClick={relatedWorkerId ? () => setProfile({ role: "worker", id: relatedWorkerId, name: detail.worker_name ?? "" }) : undefined} />
                 )}
-                <ProfileInfoCard icon={CalendarDays} label="Đơn / buổi"
-                  value={`${detail.booking_code || `#${detail.booking}`}${detail.schedule_sequence_no ? ` · Buổi ${detail.schedule_sequence_no}` : ""}`} />
                 <ProfileInfoCard icon={Clock3} label="Giai đoạn" value={detail.stage_label} />
-                {detail.scheduled_start && <ProfileInfoCard icon={CalendarDays} label="Lịch dự kiến" value={formatComplaintDate(detail.scheduled_start)} />}
                 {detail.actual_start && <ProfileInfoCard icon={Clock3} label="Bắt đầu thực tế" value={formatComplaintDate(detail.actual_start)} />}
                 <ProfileInfoCard icon={CreditCard} label="Thanh toán" value={detail.booking_is_cash ? "Tiền mặt" : "Qua hệ thống"} />
               </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/bookings/${detail.booking}`}>Xem đơn dịch vụ</Link>
-              </Button>
               <div className="space-y-1 border-t border-slate-100 pt-3">
                 <h4 className="text-sm font-semibold text-slate-900">Phản ánh của người gửi</h4>
                 <p className="whitespace-pre-wrap break-words text-sm text-slate-700">{detail.content || "Chưa có nội dung bổ sung."}</p>
@@ -390,7 +381,7 @@ export function ComplaintDetailPage({ complaintId, fromDiscipline }: { complaint
                   </TabsList>
                 </div>
                 <TabsContent value="workflow" forceMount className="mt-0 p-4 data-[state=inactive]:hidden sm:p-5">
-                  <ComplaintWorkflowPanel key={detail.id} detail={detail} />
+                  <ComplaintWorkflowPanel key={detail.id} detail={detail} onPreviewImage={setZoomedImage} />
                 </TabsContent>
                 <TabsContent value="history" className="mt-0 p-4 sm:p-5">
                   <ComplaintHistory detail={detail} />

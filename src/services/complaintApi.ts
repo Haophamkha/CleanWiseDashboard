@@ -97,6 +97,7 @@ export const complaintApi = baseApi.injectEndpoints({
         { type: "Complaints", id }, { type: "Complaints", id: "LIST" },
         ...(result ? [
           { type: "Bookings" as const, id: result.booking },
+          { type: "Bookings" as const, id: "LIST" },
           { type: "Bookings" as const, id: `TIMELINE-${result.booking}` },
           { type: "Wallets" as const, id: "LIST" },
           { type: "Wallets" as const, id: "TARGETS" },
