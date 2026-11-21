@@ -29,7 +29,6 @@ import {
   InvitationStatus,
   CancelBookingDialog,
   EditBookingDialog,
-  RescheduleDialog,
   ScheduleReasonActions,
 } from "./BookingActions";
 import { useGetServiceDetailQuery } from "@/services/servicesApi";
@@ -243,7 +242,7 @@ export function BookingDetailPage({ id }: { id: number }) {
               Các buổi làm
             </CardTitle>
             <p className="mt-1 text-sm text-slate-500">
-              Chọn các buổi chưa có nhân viên để gửi lời mời nhận việc.
+              Chọn các buổi chưa có nhân viên để gửi lời mời nhận việc. Buổi đã có nhân viên có thể đổi người phụ trách, giữ nguyên lịch.
             </p>
           </div>
           {firstSelected && selected.length > 1 && (
@@ -369,10 +368,7 @@ export function BookingDetailPage({ id }: { id: number }) {
                             schedule={schedule}
                             contextLabel={`${booking.service.name} · ${booking.address.address_line}`}
                           />
-                          <RescheduleDialog
-                            bookingId={booking.id}
-                            schedule={schedule}
-                          />
+
                         </>
                       )}
                       <ScheduleReasonActions
