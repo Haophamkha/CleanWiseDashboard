@@ -9,14 +9,11 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
-  ClipboardEdit,
   ClipboardList,
   Copy,
-  Eye,
   MoreHorizontal,
   RefreshCw,
   Search,
-  UserRoundCheck,
   UserRoundX,
   X,
 } from "lucide-react";
@@ -171,20 +168,8 @@ function BookingRowActions({ booking }: { booking: BookingListItem }) {
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem asChild>
             <Link href={`/bookings/${booking.id}`}>
-              <Eye className="h-4 w-4" />
-              Xem chi tiết
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/bookings/${booking.id}#schedules`}>
-              <UserRoundCheck className="h-4 w-4" />
-              Phân công
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/bookings/${booking.id}#booking-info`}>
-              <ClipboardEdit className="h-4 w-4" />
-              Sửa thông tin
+              <ClipboardList className="h-4 w-4" />
+              Quản lý đơn
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem

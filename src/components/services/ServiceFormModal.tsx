@@ -29,11 +29,16 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import ServiceGroupCombobox from "./ServiceGroupCombobox";
 import PricingConfigBuilder from "./schema/PricingConfigBuilder";
 import ServiceSchemaBuilder from "./schema/ServiceSchemaBuilder";
 import { OptionImageUploadContext } from "./OptionImageUploadContext";
 
 type Props = {
+  groupCodes: string[];
+  groupsLoading?: boolean;
+  groupsError?: boolean;
+  onRetryGroups?: () => void;
   open: boolean;
   onClose: () => void;
   editingService?: ServiceDetail | null;
@@ -61,6 +66,10 @@ function fieldError(fields: FormField[]): string | null {
 }
 export default function ServiceFormModal({
   open,
+  groupCodes,
+  groupsLoading,
+  groupsError,
+  onRetryGroups,
   onClose,
   editingService,
   isEditMode,
@@ -264,17 +273,15 @@ export default function ServiceFormModal({
                             </p>
                           )}
                         </label>
-                        <label className="flex flex-col gap-1.5 text-sm text-slate-600">
-                          <span>Mã nhóm dịch vụ</span>
-                          <Input
-                            value={sectionCode}
-                            maxLength={150}
-                            placeholder="HOME_CLEANING"
-                            onChange={(event) =>
-                              setSectionCode(event.target.value)
-                            }
-                          />
-                        </label>
+                        <ServiceGroupCombobox
+                          value={sectionCode}
+                          onChange={setSectionCode}
+                          codes={groupCodes}
+                          disabled={busy}
+                          loading={groupsLoading}
+                          loadError={groupsError}
+                          onRetry={onRetryGroups}
+                        />
                       </div>
                       <label className="flex flex-col gap-1.5 text-sm text-slate-600">
                         <span>Tên dịch vụ</span>

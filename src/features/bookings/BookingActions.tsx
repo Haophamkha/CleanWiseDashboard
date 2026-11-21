@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useWithdrawInvitationMutation, useBulkAssignMutation, useCancelAdminBookingMutation, useCompleteScheduleMutation, useGetAvailableWorkersQuery, useUnassignWorkerMutation, useUpdateAdminBookingMutation, useUpdateAdminScheduleMutation } from "@/services/bookingApi";
+import { useWithdrawInvitationMutation, useBulkAssignMutation, useCancelAdminBookingMutation, useCompleteScheduleMutation, useGetAvailableWorkersQuery, useUpdateAdminBookingMutation, useReassignWorkersMutation } from "@/services/bookingApi";
 import type { AvailableWorker, BookingDetail, Schedule } from "@/types/Booking";
 import { apiError, dateTime, Field } from "./booking-ui";
 import { WorkerProfilePanel } from "./WorkerProfilePanel";
@@ -40,12 +40,16 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
     { skip: !open, refetchOnMountOrArgChange: true, refetchOnFocus: false, refetchOnReconnect: false },
   );
   const [bulkAssign, { isLoading: bulkLoading }] = useBulkAssignMutation();
+  const [reassign, { isLoading: reassignLoading }] = useReassignWorkersMutation();
+  const [replacementReason, setReplacementReason] = useState("");
+  const isReplacement = Boolean(schedule.current_assignment);
+  const submitting = bulkLoading || reassignLoading;
   const ids = selectedScheduleIds?.length ? selectedScheduleIds : [schedule.id];
   const isBulk = ids.length > 1;
   const searchText = search.trim().toLocaleLowerCase("vi");
   const filteredWorkers = (workers ?? []).filter((worker) => {
     const matchesGroup = group === "favorites" ? worker.is_customer_favorite : group === "requested" ? worker.is_customer_requested : worker.can_receive_invitation;
-    return matchesGroup && (!searchText || [worker.full_name, worker.username, worker.phone_number].some((value) => value?.toLocaleLowerCase("vi").includes(searchText)));
+    return worker.id !== schedule.current_assignment?.worker.id && matchesGroup && (!searchText || [worker.full_name, worker.username, worker.phone_number].some((value) => value?.toLocaleLowerCase("vi").includes(searchText)));
   });
   const totalPages = Math.max(1, Math.ceil(filteredWorkers.length / 12));
   const currentPage = Math.min(page, totalPages);
@@ -54,8 +58,10 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
   const groupLabel = group === "favorites" ? "khách yêu thích" : group === "requested" ? "khách yêu cầu" : "phù hợp";
 
   const handleOpenChange = (value: boolean) => {
+    if (submitting) return;
     setOpen(value);
     if (!value) {
+      setReplacementReason("");
       setSearch("");
       setPreviewWorker(undefined);
       setSelectedWorkers([]);
@@ -75,8 +81,19 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedWorkers.length) return;
+    if (submitting || !selectedWorkers.length) return;
     try {
+      if (isReplacement && schedule.current_assignment) {
+        if (!replacementReason.trim()) return;
+        await reassign({ bookingId, scheduleId: schedule.id, assignment_id: schedule.current_assignment.id,
+          worker_ids: selectedWorkers.map((worker) => worker.id), reason: replacementReason.trim(), response_minutes: responseMinutes }).unwrap();
+        toast.success("Đã bỏ phân công cũ và gửi lời mời thay nhân viên.");
+        // Close directly: the request's loading flag can still be true in this closure.
+        setOpen(false);
+        setSelectedWorkers([]);
+        setReplacementReason("");
+        return;
+      }
       const result = await bulkAssign({ booking_id: bookingId, schedule_ids: ids, worker_ids: selectedWorkers.map((worker) => worker.id), response_minutes: responseMinutes }).unwrap();
       const sentSessions = new Set(result.assigned.map((item) => item.schedule_id)).size;
       toast.success(`Đã gửi ${result.assigned.length} lời mời cho ${sentSessions}/${ids.length} buổi.`);
@@ -85,19 +102,20 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
         const reason = typeof item.reason === 'object' && item.reason ? Object.values(item.reason).flat().join(' ') : String(item.reason);
         return `Buổi #${number}: ${reason}`;
       }).join('\n'), { duration: 10000 });
-      handleOpenChange(false);
+      setOpen(false);
+      setSelectedWorkers([]);
     } catch (error) {
       toast.error(apiError(error), { duration: 10000 });
     }
   };
 
-  if (schedule.current_assignment || schedule.invitation) return null;
+  if (schedule.status !== "PENDING" || (!isReplacement && schedule.invitation)) return null;
 
   return <Dialog open={open} onOpenChange={handleOpenChange}>
-    <DialogTrigger asChild><Button size="sm">{isBulk ? `Phân công ${ids.length} buổi` : "Phân công"}</Button></DialogTrigger>
+    <DialogTrigger asChild><Button size="sm">{isReplacement ? "Đổi nhân viên" : isBulk ? `Phân công ${ids.length} buổi` : "Phân công"}</Button></DialogTrigger>
     <DialogContent className="flex h-[90dvh] max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl flex-col gap-0 overflow-hidden p-0">
       <DialogHeader className="shrink-0 border-b border-slate-200 px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-6">
-        <DialogTitle>{isBulk ? `Phân công ${ids.length} buổi` : `Phân công buổi #${schedule.sequence_no}`}</DialogTitle>
+        <DialogTitle>{isReplacement ? `Đổi nhân viên buổi #${schedule.sequence_no}` : isBulk ? `Phân công ${ids.length} buổi` : `Phân công buổi #${schedule.sequence_no}`}</DialogTitle>
         <p className="pr-4 text-xs text-slate-600 sm:text-sm">{contextLabel}</p>
         <p className="text-xs text-slate-500">{dateTime(schedule.scheduled_start)} – {dateTime(schedule.scheduled_end)}</p>
         <DialogDescription className="sr-only sm:not-sr-only">{previewWorker ? "Thông tin hồ sơ nhân viên." : "Nhân viên phù hợp dịch vụ, khu vực, lịch làm và điều kiện số dư."}</DialogDescription>
@@ -135,9 +153,13 @@ export function AssignWorkerDialog({ bookingId, schedule, selectedScheduleIds, s
             <span aria-live="polite" className="font-medium text-blue-700">Đã chọn {selectedWorkers.length} nhân viên{selectedWorkers.length >= 100 && " (tối đa 100)"}</span>
             {selectedWorkers.length > 0 && <button type="button" className="text-blue-600 hover:underline" onClick={() => setSelectedWorkers([])}>Bỏ chọn tất cả</button>}
           </div>
+          {isReplacement && <div className="mb-3 space-y-2">
+            <p className="text-sm text-amber-700">Nhân viên hiện tại: {schedule.current_assignment?.worker.full_name}. Khi gửi thành công, phân công cũ sẽ được bỏ; người xác nhận lời mời mới đầu tiên sẽ nhận buổi làm. Giữ nguyên thời gian đã đặt.</p>
+            <Field label="Lý do đổi nhân viên" required><Textarea value={replacementReason} onChange={(event) => setReplacementReason(event.target.value)} maxLength={500} required /></Field>
+          </div>}
           <div className="flex flex-wrap items-end justify-between gap-3">
             <Field label="Thời hạn phản hồi"><SelectField label="Thời hạn phản hồi" className="min-w-32" value={String(responseMinutes)} onValueChange={(value) => setResponseMinutes(Number(value))} options={[15, 30, 60].map((minutes) => ({ value: String(minutes), label: minutes + " phút" }))} /></Field>
-            <Button disabled={!selectedWorkers.length || bulkLoading}>{bulkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Gửi lời mời nhận việc{selectedWorkers.length > 0 && ` (${selectedWorkers.length})`}</Button>
+            <Button disabled={!selectedWorkers.length || submitting || (isReplacement && !replacementReason.trim())}>{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Gửi lời mời nhận việc{selectedWorkers.length > 0 && ` (${selectedWorkers.length})`}</Button>
           </div>
           <p className="mt-2 text-xs text-slate-500">Người xác nhận đầu tiên nhận việc.</p>
         </div>}
@@ -163,19 +185,22 @@ function InvitationWorkerCard({ worker, selected, selectionDisabled, onSelect, o
   </article>;
 }
 
-export function RescheduleDialog({ bookingId, schedule }: { bookingId: number; schedule: Schedule }) {
-  const local = (value: string) => new Date(new Date(value).getTime() - new Date(value).getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  const [open, setOpen] = useState(false); const [start, setStart] = useState(local(schedule.scheduled_start)); const [end, setEnd] = useState(local(schedule.scheduled_end)); const [reason, setReason] = useState(""); const [update, { isLoading }] = useUpdateAdminScheduleMutation();
-  const submit = async (e: React.FormEvent) => { e.preventDefault(); try { await update({ bookingId, scheduleId: schedule.id, data: { scheduled_start: new Date(start).toISOString(), scheduled_end: new Date(end).toISOString(), reason } }).unwrap(); toast.success("Đã đổi lịch buổi làm."); setOpen(false); } catch (error) { toast.error(apiError(error), { duration: 10000 }); } };
-  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="sm" variant="outline">Đổi lịch</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Đổi lịch buổi #{schedule.sequence_no}</DialogTitle><DialogDescription>Lịch hiện tại: {dateTime(schedule.scheduled_start)}.</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Bắt đầu" required><Input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} required /></Field><Field label="Kết thúc" required><Input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} required /></Field></div><Field label="Lý do đổi lịch" required><Textarea value={reason} onChange={(e) => setReason(e.target.value)} required /></Field><DialogFooter><Button variant="outline" type="button" onClick={() => setOpen(false)}>Đóng</Button><Button disabled={isLoading}>Lưu lịch mới</Button></DialogFooter></form></DialogContent></Dialog>;
-}
-
 export function ScheduleReasonActions({ bookingId, schedule }: { bookingId: number; schedule: Schedule }) {
-  const [mode, setMode] = useState<"unassign" | "complete" | null>(null); const [reason, setReason] = useState(""); const [completionNote, setCompletionNote] = useState(""); const [unassign, unassignState] = useUnassignWorkerMutation(); const [complete, completeState] = useCompleteScheduleMutation();
-  const submit = async (e: React.FormEvent) => { e.preventDefault(); try { if (mode === "unassign") { await unassign({ bookingId, scheduleId: schedule.id, reason }).unwrap(); toast.success("Đã bỏ phân công."); } else { await complete({ bookingId, scheduleId: schedule.id, reason, completion_note: completionNote }).unwrap(); toast.success("Đã xác nhận hoàn thành."); } setMode(null); } catch (error) { toast.error(apiError(error), { duration: 10000 }); } };
-  return <><div className="flex gap-2">{schedule.current_assignment && schedule.status === "PENDING" && <Button size="sm" variant="ghost" onClick={() => setMode("unassign")}>Bỏ gán</Button>}{schedule.status === "IN_PROGRESS" && <Button size="sm" onClick={() => setMode("complete")}>Xác nhận hoàn thành</Button>}</div><Dialog open={mode !== null} onOpenChange={(value) => !value && setMode(null)}><DialogContent><DialogHeader><DialogTitle>{mode === "unassign" ? "Bỏ phân công nhân viên" : "Xác nhận hoàn thành thủ công"}</DialogTitle><DialogDescription>Buổi #{schedule.sequence_no} • {dateTime(schedule.scheduled_start)}</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-4"><Field label="Lý do" required><Textarea value={reason} onChange={(e) => setReason(e.target.value)} required /></Field>{mode === "complete" && <Field label="Ghi chú hoàn thành"><Textarea value={completionNote} onChange={(e) => setCompletionNote(e.target.value)} /></Field>}<DialogFooter><Button type="button" variant="outline" onClick={() => setMode(null)}>Đóng</Button><Button variant={mode === "unassign" ? "destructive" : "default"} disabled={unassignState.isLoading || completeState.isLoading}>Xác nhận</Button></DialogFooter></form></DialogContent></Dialog></>;
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [completionNote, setCompletionNote] = useState("");
+  const [complete, { isLoading }] = useCompleteScheduleMutation();
+  if (schedule.status !== "IN_PROGRESS") return null;
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isLoading) return;
+    try {
+      await complete({ bookingId, scheduleId: schedule.id, reason, completion_note: completionNote }).unwrap();
+      toast.success("Đã xác nhận hoàn thành."); setOpen(false);
+    } catch (error) { toast.error(apiError(error)); }
+  };
+  return <Dialog open={open} onOpenChange={(next) => { if (!isLoading) setOpen(next); }}><DialogTrigger asChild><Button size="sm">Xác nhận hoàn thành</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Xác nhận hoàn thành thủ công</DialogTitle><DialogDescription>Buổi #{schedule.sequence_no}</DialogDescription></DialogHeader><form onSubmit={submit}><Field label="Lý do" required><Textarea value={reason} onChange={(event) => setReason(event.target.value)} required /></Field><Field label="Ghi chú hoàn thành"><Textarea value={completionNote} onChange={(event) => setCompletionNote(event.target.value)} /></Field><DialogFooter><Button disabled={isLoading}>Xác nhận</Button></DialogFooter></form></DialogContent></Dialog>;
 }
-
 
 export function InvitationStatus({ bookingId, schedule }: { bookingId: number; schedule: Schedule }) {
   const [withdraw, { isLoading }] = useWithdrawInvitationMutation();

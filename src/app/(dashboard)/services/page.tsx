@@ -276,6 +276,10 @@ export default function ServicesPage() {
                 : `loading-${editingId}`
           }
           open
+          groupCodes={groupCodes}
+          groupsLoading={query.isLoading}
+          groupsError={query.isError}
+          onRetryGroups={() => { void query.refetch(); }}
           onClose={() => setModalOpen(false)}
           editingService={currentDetail}
           isEditMode={editingId !== null}
