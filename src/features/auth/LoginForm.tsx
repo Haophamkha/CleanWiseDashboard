@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -10,7 +11,6 @@ import {
   EyeOff,
   Loader2,
   Lock,
-  Sparkle,
   User,
 } from "lucide-react";
 import { useLoginMutation, saveTokens } from "@/services/authApi";
@@ -196,9 +196,7 @@ export default function LoginForm() {
             <div className="relative grid h-24 w-24 place-items-center">
               <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/30" />
               <span className="absolute inset-2 animate-pulse rounded-full bg-blue-500/30 blur-md" />
-              <span className="relative grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-2xl shadow-blue-500/40">
-                <Sparkle className="h-9 w-9" />
-              </span>
+              <Image src="/logo-mark.png" alt="CleanWise" width={80} height={80} className="relative h-20 w-20 rounded-2xl shadow-2xl shadow-blue-500/40" />
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-4 space-y-2 text-center delay-150 duration-500 fill-mode-both">

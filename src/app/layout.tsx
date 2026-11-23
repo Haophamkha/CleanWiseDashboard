@@ -12,6 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
+      <head><link rel="icon" href="/icon.png" type="image/png" /></head>
       <body suppressHydrationWarning>
         <Provider store={store}>{children}</Provider>
         <Toaster position="top-right" richColors toastOptions={{ classNames: { title: "whitespace-pre-line break-words" } }} />

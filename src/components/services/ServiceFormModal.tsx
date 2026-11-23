@@ -114,6 +114,11 @@ export default function ServiceFormModal({
     [iconPreview],
   );
   const [deleteImageIds, setDeleteImageIds] = useState<number[]>([]);
+  const [primaryImageId, setPrimaryImageId] = useState<number | null>(null);
+  const effectivePrimaryId =
+    primaryImageId !== null && !deleteImageIds.includes(primaryImageId)
+      ? primaryImageId
+      : null;
   const [error, setError] = useState<string | null>(null);
   const [pricingErrors, setPricingErrors] = useState<string[]>([]);
   const previews = useMemo(
@@ -173,6 +178,7 @@ export default function ServiceFormModal({
       icon_file: iconFile,
       remove_icon: removeIcon ? true : undefined,
       delete_image_ids: deleteImageIds.length ? deleteImageIds : undefined,
+      primary_image_id: effectivePrimaryId ?? undefined,
     };
     try {
       if (isEdit && editingService)
@@ -394,12 +400,25 @@ export default function ServiceFormModal({
                                   alt={image.alt_text ?? "Ảnh dịch vụ"}
                                   className={`h-24 w-28 rounded-md object-cover ${deleteImageIds.includes(image.id) ? "opacity-40" : ""}`}
                                 />
-                                {image.is_primary && (
+                                {(effectivePrimaryId !== null ? effectivePrimaryId === image.id : image.is_primary) && (
                                   <Badge className="absolute left-3 top-3 text-[10px]">
                                     Ảnh chính
                                   </Badge>
                                 )}
-                                <label className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                                {!(effectivePrimaryId !== null ? effectivePrimaryId === image.id : image.is_primary) &&
+                                  !deleteImageIds.includes(image.id) && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="mt-2 h-7 w-full text-xs"
+                                      onClick={() => setPrimaryImageId(image.id)}
+                                    >
+                                      {"\u0110\u1eb7t l\u00e0m \u1ea3nh ch\u00ednh"}
+                                    </Button>
+                                  )}
+                                
+<label className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                                   <Checkbox
                                     checked={deleteImageIds.includes(image.id)}
                                     onCheckedChange={(checked) =>

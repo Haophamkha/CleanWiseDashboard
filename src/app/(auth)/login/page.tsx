@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Sparkle, ShieldCheck, Users, BarChart3 } from "lucide-react";
+import { ShieldCheck, Users, BarChart3 } from "lucide-react";
 import LoginForm from "@/features/auth/LoginForm";
 
 export const metadata: Metadata = {
@@ -39,9 +39,7 @@ export default function LoginPage() {
         {/* Bên trái: form */}
         <section className="bg-white/80 p-8 backdrop-blur-md sm:p-10">
           <div className="mb-8 flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30">
-              <Sparkle className="h-5 w-5" />
-            </span>
+            <Image src="/logo-mark.png" alt="CleanWise" width={40} height={40} className="h-10 w-10 rounded-xl shadow-lg shadow-blue-500/30" />
             <span className="text-lg font-semibold text-slate-900">
               CleanWise{" "}
               <span className="text-xs font-medium text-slate-500">Admin</span>
