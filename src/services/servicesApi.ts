@@ -76,6 +76,10 @@ const buildServiceFormData = (payload: ServiceMutationPayload): FormData => {
     formData.append("delete_image_ids", String(id));
   });
 
+  if (payload.primary_image_id != null) {
+    formData.append("primary_image_id", String(payload.primary_image_id));
+  }
+
   return formData;
 };
 

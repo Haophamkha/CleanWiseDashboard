@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, LogOut, Sparkle, X } from "lucide-react";
+import { ChevronLeft, LogOut, X } from "lucide-react";
 import { NAV_ITEMS } from "@/config/navigation";
 import { useGetAdminNotificationSummaryQuery } from "@/services/notificationApi";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
@@ -107,9 +108,7 @@ export default function Sidebar({
             onClick={onClose}
             title={collapsed ? "CleanWise" : undefined}
           >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-700 to-sky-600 text-white shadow-md shadow-blue-700/25">
-              <Sparkle className="h-5 w-5" />
-            </span>
+            <Image src="/logo-mark.png" alt="CleanWise" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl shadow-md shadow-blue-700/25" />
 
             <span className={`leading-tight ${label}`}>
               <span className="block text-lg font-bold tracking-tight text-slate-900">
